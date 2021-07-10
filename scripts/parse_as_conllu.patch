@@ -1,0 +1,4 @@
+44c44
+<                 '_',                                        #XPOSTAG: Language-specific part-of-speech tag;                                            # underscore if not available.
+---
+>                 word.tag_,                                        #XPOSTAG: Language-specific part-of-speech tag;                                            # underscore if not available.
