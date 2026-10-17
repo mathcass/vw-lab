@@ -81,19 +81,38 @@ should be considered and learned as a whole.
 
 """
 
+import argparse
 from pathlib import Path
 import sys
 
-input_file = Path(sys.argv[1])
-try:
-    output_file = Path(sys.argv[2])
-    tags_file = output_file.with_suffix(".tags")
-except IndexError:
-    output_file = sys.stdout
-    tags_file = Path(".") / "conllu.tags"
+parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+parser.add_argument("input_file", type=Path)
+parser.add_argument("output_file", type=Path, nargs="?")
+parser.add_argument(
+    "--tags",
+    type=Path,
+    help="Existing tag map to reuse (e.g. the one written for train). Without "
+    "it, a new map is built from the input. Dev and test must reuse train's "
+    "map, or their label numbers will not match the model's.",
+)
+args = parser.parse_args()
 
+input_file = args.input_file
+output_file = args.output_file or sys.stdout
+tags_file = (
+    args.output_file.with_suffix(".tags") if args.output_file else Path("conllu.tags")
+)
 
 POS_MAP = {}
+if args.tags:
+    with open(args.tags) as f:
+        for line in f:
+            tag, id_ = line.rstrip("\n").split("\t")
+            POS_MAP[tag] = int(id_)
+    frozen = True
+else:
+    frozen = False
+
 sentences = []
 
 # From https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/master/en_ewt-ud-train.conllu
@@ -106,18 +125,31 @@ with open(input_file) as f:
 
         if not line.strip():
             # At a blank line, complete the sentence and start a new one
-            sentences.append(sentence)
+            if sentence:
+                sentences.append(sentence)
             sentence = []
         else:
-            row = line.strip().split("\t")
+            row = line.rstrip("\n").split("\t")
             id_, word, pos = row[0], row[1], row[4]
-            pos_id = POS_MAP.setdefault(pos, len(POS_MAP) + 1)
+            if not id_.isdigit():
+                # Skip multiword tokens ("19-20 don't") and empty nodes
+                # ("8.1"). Their parts are already listed as regular tokens.
+                continue
+            if frozen:
+                if pos not in POS_MAP:
+                    sys.exit(f"{input_file}: tag {pos!r} is not in {args.tags}")
+                pos_id = POS_MAP[pos]
+            else:
+                pos_id = POS_MAP.setdefault(pos, len(POS_MAP) + 1)
             sentence.append((pos_id, word))
+    if sentence:
+        sentences.append(sentence)
 
 
-with open(tags_file, "w") as f:
-    for k, v in POS_MAP.items():
-        print(f"{k}\t{v}", file=f)
+if not frozen:
+    with open(tags_file, "w") as f:
+        for k, v in POS_MAP.items():
+            print(f"{k}\t{v}", file=f)
 
 
 def write_output(f):
@@ -125,6 +157,7 @@ def write_output(f):
         for label, token in sentence:
             token = token.replace(":", "-COLON-")
             token = token.replace("|", "-PIPE-")
+            token = token.replace(" ", "_")
             print(f"{label} | {token}", file=f)
 
         print("", file=f)

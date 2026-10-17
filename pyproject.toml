@@ -1,0 +1,7 @@
+[project]
+name = "vw-universal-dependencies"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "vowpalwabbit>=9.11.9",
+]
