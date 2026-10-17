@@ -27,9 +27,9 @@ def read_vw(path):
                     sentences.append(sentence)
                 sentence = []
                 continue
-            # "LABEL | word" or "LABEL |namespace word"
+            # "LABEL | word ..." or "LABEL |w word |l ..."; the word comes first.
             label, features = line.split("|", 1)
-            word = features.split(" ", 1)[1]
+            word = features.split(" ")[1]
             sentence.append((int(label), word))
     if sentence:
         sentences.append(sentence)

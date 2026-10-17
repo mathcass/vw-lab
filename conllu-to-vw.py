@@ -41,48 +41,32 @@ CONLLU looks like,
 
 (Note the newline at the end, and newlines will separate records.)
 
-The format for Vowpal Wabbit would look like,
+The format for Vowpal Wabbit looks like this (one line per word, shortened):
 ```
-1 | Al
-2 | -
-1 | Zaman
-3 | COLON
-4 | American
-5 | forces
-6 | killed
-1 | Shaikh
-1 | Abdullah
-1 | al
-2 | -
-1 | Ani
-7 | ,
-8 | the
-9 | preacher
-10 | at
-8 | the
-9 | mosque
-10 | in
-8 | the
-9 | town
-10 | of
-1 | Qaim
-7 | ,
-10 | near
-8 | the
-4 | Syrian
-9 | border
-11 | .
+1 |w Al |l al |s 1=l 2=al |p 1=a 2=al |h L=Xx S=Xx |f cap len=2
+2 |w - |l - |s 1=- |p 1=- |h L=- S=- |f hyphen punct len=1
+1 |w Zaman |l zaman |s 1=n 2=an 3=man 4=aman |p 1=z 2=za 3=zam |h L=Xxxxx S=Xx |f cap len=5
+...
+29 |w . |l . |s 1=. |p 1=. |h L=. S=. |f period punct len=1
 
 ```
 
-Where the label (the number before "|") is mapped to a part of speech. And a
-newline separates sentences. This is so that VW knows that this whole sentence
-should be considered and learned as a whole.
+The label (the number before the first "|") is the part-of-speech id from the
+tag map. A blank line separates sentences, so VW learns each sentence as one
+sequence. Each feature group is its own namespace, named by its first letter,
+which is how run.sh refers to them (`--search_neighbor_features`, `-q`):
+
+  w  the word as written          s  suffixes of length 1-4 (lowercased)
+  l  the word lowercased          p  prefixes of length 1-3 (lowercased)
+  h  word shape: long (Xxxxx) and collapsed (Xx)
+  f  flags: capitalized, all caps, digit, number, hyphen, period, @, URL,
+     punctuation-only, and length (capped at 10)
 
 """
 
 import argparse
 from pathlib import Path
+import re
 import sys
 
 parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -99,9 +83,7 @@ args = parser.parse_args()
 
 input_file = args.input_file
 output_file = args.output_file or sys.stdout
-tags_file = (
-    args.output_file.with_suffix(".tags") if args.output_file else Path("conllu.tags")
-)
+tags_file = args.output_file.with_suffix(".tags") if args.output_file else Path("conllu.tags")
 
 POS_MAP = {}
 if args.tags:
@@ -152,13 +134,62 @@ if not frozen:
             print(f"{k}\t{v}", file=f)
 
 
+def escape(feature):
+    """':' and '|' are VW syntax and spaces separate features."""
+    return feature.replace(":", "-COLON-").replace("|", "-PIPE-").replace(" ", "_")
+
+
+def shape(word, collapse):
+    out = []
+    for ch in word:
+        c = "X" if ch.isupper() else "x" if ch.islower() else "d" if ch.isdigit() else ch
+        if not (collapse and out and out[-1] == c):
+            out.append(c)
+    return "".join(out)
+
+
+def flags(word):
+    f = []
+    if word[:1].isupper():
+        f.append("cap")
+    if word.isupper() and any(c.isalpha() for c in word):
+        f.append("allcap")
+    if any(c.isdigit() for c in word):
+        f.append("digit")
+    if word.replace(".", "").replace(",", "").isdigit():
+        f.append("number")
+    if "-" in word:
+        f.append("hyphen")
+    if "." in word:
+        f.append("period")
+    if "@" in word:
+        f.append("at")
+    if re.match(r"(https?|www\.)", word, re.I) or re.search(r"\.(com|org|net|edu)\b", word, re.I):
+        f.append("url")
+    if not any(c.isalnum() for c in word):
+        f.append("punct")
+    f.append(f"len={min(len(word), 10)}")
+    return f
+
+
+def features(token):
+    word = token.replace(" ", "_")
+    lw = word.lower()
+    groups = {
+        "w": [word],
+        "l": [lw],
+        "s": [f"{k}={lw[-k:]}" for k in range(1, 5) if len(lw) >= k],
+        "p": [f"{k}={lw[:k]}" for k in range(1, 4) if len(lw) >= k],
+        "h": [f"L={shape(word, False)}", f"S={shape(word, True)}"],
+        "f": flags(word),
+    }
+    return " ".join(f"|{ns} " + " ".join(escape(x) for x in feats) for ns, feats in groups.items())
+
+
 def write_output(f):
     for sentence in sentences:
         for label, token in sentence:
-            token = token.replace(":", "-COLON-")
-            token = token.replace("|", "-PIPE-")
-            token = token.replace(" ", "_")
-            print(f"{label} | {token}", file=f)
+            print(f"{label} {features(token)}", file=f)
 
         print("", file=f)
 
