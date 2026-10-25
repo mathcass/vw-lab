@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>FINDINGS.html</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml;charset=utf-8"/>
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"  />
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"  /><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'><style> body { box-sizing: border-box; max-width: 740px; width: 100%; margin: 40px auto; padding: 0 10px; } </style><script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script><script src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script><script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>
+</head>
+
+<body>
+
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+<h1 id="can-vowpal-wabbit-replace-jev-running-findings">Can Vowpal
+Wabbit replace Jev? — running findings</h1>
+<p>The question: can a VW model answer Jev-style decisions (yes/no, pick
+one, score on a scale) well enough for low-stakes product use
+(e.g. routing a query to an LLM tier)? Two bars:</p>
+<ol type="1">
+<li><strong>Zero-shot:</strong> a pre-trained model reads a new schema
+and is usable as-is.</li>
+<li><strong>Cold start + feedback:</strong> usable-ish on day one, then
+improves quickly from product feedback (corrections, or just “that was
+right/wrong”).</li>
+</ol>
+<h2 id="data">Data</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Name</th>
+<th>What it is</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BEV Decision Mix (<code>avbiswas/bev-decision</code>)</td>
+<td>Third-party set of ~276k texts / 502k questions rebuilt from public
+datasets into Jev’s CHOICE / NOUL / SCORE format. 28 domains. License
+listed as “unknown”.</td>
+<td>Train, dev, seen-domain test</td>
+</tr>
+<tr>
+<td>fast-decisions (<code>fastino/fast-decisions</code>)</td>
+<td>Fastino’s published dev split of their GLiNER2.5-Decide benchmark:
+17 domains × 100 texts, 2,900 questions. Synthetic, long, deliberately
+tricky.</td>
+<td><strong>Lockbox</strong> (see below): never trained or tuned on</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-the-lockbox-is">What the lockbox is</h3>
+<p>“Lockbox” is our name for a test set that is locked away during
+development. We never train on it, and we never use it to choose
+settings. We only open it to measure a finished model. This is the
+fairest test of the zero-shot bar, because nothing about it leaked into
+how VW was built. BEV’s dev split can’t fully play that role: we looked
+at dev scores while choosing features, so dev is slightly tuned-on.</p>
+<p>Our lockbox is Fastino’s fast-decisions set:</p>
+<ul>
+<li><strong>Who made it:</strong> Fastino, the GLiNER2.5-Decide team, as
+a benchmark of their own. It is unrelated to BEV, so its writing style,
+schemas and label names are new to VW.</li>
+<li><strong>Size:</strong>
+<ul>
+<li>17 domains, 100 texts each, 1,700 texts in all.</li>
+<li>2,900 questions: 1,900 choice, 700 yes/no and 300 multi-label.</li>
+</ul></li>
+<li><strong>What it looks like:</strong>
+<ul>
+<li>The domains are product-style tasks: email triage, ticket routing,
+banking intent, clinic requests, restaurant reviews, sports recaps and
+so on.</li>
+<li>The texts are synthetic and fairly long, with a median of 750
+characters.</li>
+<li>Many options are bare labels with no description. For example,
+ticket routing picks a queue from <code>billing_disputes</code>,
+<code>refunds</code>, <code>shipping</code>, <code>returns</code>,
+<code>identity</code> and <code>payments</code>.</li>
+</ul></li>
+<li><strong>The 2,600 figure:</strong> it counts the 2,900 questions
+minus the 300 multi-label ones, which the OpenAI API can’t answer.</li>
+<li><strong>No overlap with BEV:</strong> 76 BEV texts that share an
+8-word sequence with a lockbox text were removed.</li>
+</ul>
+<p>The <strong>lockbox learning curve</strong> (below) is the one place
+where VW learns from lockbox texts. Even there, each run learns from
+half of a domain’s texts and is scored on the other half. Every adapted
+model is then thrown away, so the lockbox stays unused for building or
+tuning the main model.</p>
+<p>Splits (<code>src/vwjev/splits.py</code>): the 28 BEV domains are
+grouped into 4 folds. For fold k, <strong>dev</strong> = BEV test rows
+from the fold’s domains (never trained on: the zero-shot number),
+<strong>train</strong> = BEV train rows from the other domains,
+<strong>seen_test</strong> = BEV test rows from training domains. No
+text crosses splits; 76 BEV texts sharing an 8-word sequence with the
+lockbox were dropped.</p>
+<h2 id="metric">Metric</h2>
+<p>Macro-F1, pooled per domain over <code>(question name, answer)</code>
+classes, then averaged across domains
+(<code>src/vwjev/metrics.py</code>). Accuracy is reported alongside.
+“random” = uniform random choice among the offered options.</p>
+<h2 id="model">Model</h2>
+<p>VW <code>--csoaa_ldf mc</code>: one line per option, the model scores
+each option against the shared text/question features, lowest score
+wins.</p>
+<h2 id="results-fold-0">Results (fold 0)</h2>
+<blockquote>
+<p><strong>The v0–v4 table below predates two fixes</strong>
+(option-order shuffling and the min-support macro-F1). It is kept for
+the record; see “Results after fixes”.</p>
+</blockquote>
+<p>Dev domains held out in fold 0: Calibrated probability, Response
+preference and quality, Rule-conditioned decisions, Sensory quality
+rating, Sentiment / emotion / moderation, Spam detection, Tool and
+workflow decisions.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Run</th>
+<th>Features</th>
+<th>Dev (zero-shot)</th>
+<th>Seen domains</th>
+<th>Lockbox</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>random</td>
+<td></td>
+<td>0.293</td>
+<td>0.260</td>
+<td>0.179</td>
+<td></td>
+</tr>
+<tr>
+<td>v0</td>
+<td>text × option words (<code>-q tl -q ql</code>)</td>
+<td>0.288</td>
+<td>0.464</td>
+<td>0.227</td>
+<td>233 MB</td>
+</tr>
+<tr>
+<td>v1</td>
+<td>v0 + match / position interactions</td>
+<td>0.285</td>
+<td><strong>0.486</strong></td>
+<td>0.189</td>
+<td>235 MB</td>
+</tr>
+<tr>
+<td>v2</td>
+<td>generic features only (no text words)</td>
+<td>0.289</td>
+<td>0.401</td>
+<td>0.233</td>
+<td>5.5 MB</td>
+</tr>
+<tr>
+<td>v3</td>
+<td>v2 + IDF-weighted and relative overlap</td>
+<td><strong>0.307</strong></td>
+<td>0.402</td>
+<td><strong>0.264</strong></td>
+<td>6.3 MB</td>
+</tr>
+<tr>
+<td>v4</td>
+<td>v3 + low-rank text × option (<code>--lrq tl16</code>)</td>
+<td>0.306</td>
+<td>0.373</td>
+<td>0.209</td>
+<td>— (6× slower)</td>
+</tr>
+</tbody>
+</table>
+<p>All numbers macro-F1. 318k training questions, one pass, ~2–3 min to
+train.</p>
+<h3 id="what-this-says-so-far">What this says so far</h3>
+<ul>
+<li><strong>Word-pair features don’t transfer.</strong> Text-word ×
+option-word weights help on domains seen in training but add nothing
+zero-shot, and hurt on the lockbox. This matches the toy test: learned
+crosses memorize.</li>
+<li><strong>All zero-shot signal comes from generic features</strong>
+(overlap between option words and the text, relative to the other
+options; position on a scale). These get the lockbox from 0.18 (random)
+to 0.26. That is not usable.</li>
+</ul>
+<h2 id="results-after-fixes-fold-0">Results after fixes (fold 0)</h2>
+<p>Options shuffled (except score scales); macro-F1 ignores classes with
+&lt; 5 gold examples. Random = uniform random among offered options.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Run</th>
+<th>Features</th>
+<th>Dev (zero-shot)</th>
+<th>Seen domains</th>
+<th>Lockbox</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>random</td>
+<td></td>
+<td>0.320</td>
+<td>0.354</td>
+<td>0.184</td>
+<td></td>
+</tr>
+<tr>
+<td>v5</td>
+<td>text × option words + generic</td>
+<td>0.293</td>
+<td><strong>0.600</strong></td>
+<td>0.284</td>
+<td>235 MB</td>
+</tr>
+<tr>
+<td>v6</td>
+<td>generic only</td>
+<td>0.299</td>
+<td>0.448</td>
+<td><strong>0.299</strong></td>
+<td>6.4 MB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="all-four-folds-macro-f1-mean-over-folds">All four folds
+(macro-F1, mean over folds)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Dev (zero-shot)</th>
+<th>Seen domains</th>
+<th>Lockbox</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>random</td>
+<td>0.326</td>
+<td>0.360</td>
+<td>0.184</td>
+</tr>
+<tr>
+<td>v5: text × option words + generic</td>
+<td>0.327</td>
+<td><strong>0.605</strong></td>
+<td>0.290</td>
+</tr>
+<tr>
+<td>v6: generic only</td>
+<td>0.283</td>
+<td>0.450</td>
+<td><strong>0.297</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Per fold, dev: v5 0.293 / 0.324 / 0.325 / 0.367, random 0.320 / 0.359
+/ 0.327 / 0.296.</p>
+<p>Best zero-shot domains (v5): Support and intent routing 0.58 (50% acc
+on ~5 options), Tool and workflow 0.56 (60% acc), Engagement and ranking
+0.52, Reading comprehension 0.51. Worst: Sensory rating 0.11, Response
+preference 0.17, Answer verification 0.20.</p>
+<h3 id="verdict-on-headline-1-zero-shot-no-go">Verdict on headline 1
+(zero-shot): no-go</h3>
+<p>Averaged over held-out domains, zero-shot VW is no better than random
+macro-F1, and the lockbox (0.29–0.30 vs 0.18 random) is far from usable.
+Only routing-style domains with label words that appear in the text get
+well above random, and even those (0.56–0.58) are short of a product
+bar. Every VW-native lever tried (interactions, IDF/relative overlap,
+low-rank <code>--lrq</code>) left zero-shot within a few points of these
+numbers. Moving on to headline 2: cold start + feedback.</p>
+<h2 id="cold-start-feedback-fold-0-held-out-domains">Cold start +
+feedback (fold 0 held-out domains)</h2>
+<p><code>src/vwjev/feedback.py</code>: stream a held-out domain’s BEV
+train rows, answer each with the current model, update from feedback;
+score on that domain’s dev rows. Macro-F1, pre-trained generic model
+(v6), correction feedback, with OpenAI’s zero-shot score on the same dev
+rows:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Cold</th>
+<th>25</th>
+<th>100</th>
+<th>400</th>
+<th>3,200</th>
+<th>OpenAI, no training</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spam detection</td>
+<td>0.51</td>
+<td><strong>0.84</strong></td>
+<td><strong>0.91</strong></td>
+<td><strong>0.95</strong></td>
+<td>0.95 (stream ends at 1,784)</td>
+<td>0.52</td>
+</tr>
+<tr>
+<td>Tool and workflow decisions</td>
+<td>0.55</td>
+<td>0.54</td>
+<td>0.63</td>
+<td>0.63</td>
+<td>0.80</td>
+<td><strong>0.94</strong></td>
+</tr>
+<tr>
+<td>Sentiment, emotion, moderation</td>
+<td>0.32</td>
+<td>0.34</td>
+<td>0.37</td>
+<td>0.40</td>
+<td>0.50</td>
+<td><strong>0.54</strong></td>
+</tr>
+<tr>
+<td>Rule-conditioned decisions</td>
+<td>0.39</td>
+<td>0.37</td>
+<td>0.40</td>
+<td>0.38</td>
+<td>0.51</td>
+<td><strong>0.88</strong></td>
+</tr>
+<tr>
+<td>Calibrated probability</td>
+<td>0.22</td>
+<td>0.28</td>
+<td>0.27</td>
+<td>0.30</td>
+<td>0.40</td>
+<td><strong>0.44</strong></td>
+</tr>
+<tr>
+<td>Sensory quality rating</td>
+<td>0.14</td>
+<td>0.14</td>
+<td>0.13</td>
+<td>0.21</td>
+<td><strong>0.32</strong> (ends at 1,040)</td>
+<td>0.27</td>
+</tr>
+<tr>
+<td>Response preference and quality</td>
+<td>0.11</td>
+<td>0.14</td>
+<td>0.19</td>
+<td>0.17</td>
+<td>0.18</td>
+<td><strong>0.31</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Keyword-driven tasks with dataset-specific labeling become usable
+fast and can beat OpenAI (spam: 25 corrections; sensory ratings: about
+1,000).</li>
+<li>Judgment and reasoning tasks barely improve with feedback, and stay
+well below OpenAI zero-shot even after 3,200 corrections.</li>
+<li>Pre-training gives a slightly better start; a from-scratch model
+catches up within 25–100 events.</li>
+<li>Right/wrong-only (bandit) feedback matches corrections on yes/no
+tasks but lags on multi-option ones (tool routing 0.73 vs 0.80 at
+3,200).</li>
+</ul>
+<p><strong>Correction (2026-10-19):</strong> the first version of these
+curves reloaded the pre-trained model with
+<code>-i model.vw -q fl</code>, which silently drops the model’s saved
+interactions (bug-repros item 3). Cold starts were too low, e.g. Spam
+0.38 instead of 0.51. Rerun with <code>feedback.load_pretrained</code>;
+the conclusions did not change.</p>
+<h2
+id="lockbox-learning-curve-fast-decisions-17-domains-see-what-the-lockbox-is">Lockbox
+learning curve (fast-decisions, 17 domains; see “What the lockbox
+is”)</h2>
+<p><code>src/vwjev/lockbox_curve.py</code>: per domain, 10 random 50/50
+splits of the 100 texts into a test half and a learning pool; the model
+learns from 0–50 pool texts one at a time. Settings were fixed in
+advance and every adapted model is thrown away, so the lockbox is still
+unused for tuning. Macro-F1 pooled over the 10 splits, multi-label
+questions excluded:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Start / feedback</th>
+<th>0</th>
+<th>5</th>
+<th>10</th>
+<th>20</th>
+<th>30</th>
+<th>50 texts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pre-trained, corrections</td>
+<td>0.301</td>
+<td>0.266</td>
+<td>0.283</td>
+<td>0.318</td>
+<td>0.332</td>
+<td>0.365</td>
+</tr>
+<tr>
+<td>from scratch, corrections</td>
+<td>0.093</td>
+<td>0.225</td>
+<td>0.257</td>
+<td>0.304</td>
+<td>0.334</td>
+<td><strong>0.374</strong></td>
+</tr>
+<tr>
+<td>pre-trained, right/wrong only</td>
+<td>0.301</td>
+<td>0.276</td>
+<td>0.284</td>
+<td>0.275</td>
+<td>0.268</td>
+<td>0.270</td>
+</tr>
+<tr>
+<td>from scratch, right/wrong only</td>
+<td>0.093</td>
+<td>0.202</td>
+<td>0.211</td>
+<td>0.221</td>
+<td>0.225</td>
+<td>0.234</td>
+</tr>
+<tr>
+<td><strong>OpenAI, no training (same questions)</strong></td>
+<td><strong>0.603</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>After 50 labeled texts, VW is closest on agent handoff (0.59 vs
+0.62), ticket routing (0.34 vs 0.37) and email triage (0.33 vs 0.43).
+Nowhere does it reach OpenAI. Right/wrong-only feedback does not help at
+this scale.</p>
+<h2 id="openai-decisions-api-benchmark-fold-0">OpenAI Decisions API
+benchmark (fold 0)</h2>
+<p><code>src/vwjev/openai_decide.py</code> and
+<code>openai_report.py</code>; <code>gpt-6-luna</code>, same questions
+as VW (same text cut and option order), multi-label skipped. Macro-F1
+(accuracy):</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Set</th>
+<th>For VW this is</th>
+<th>VW full</th>
+<th>VW generic</th>
+<th>OpenAI</th>
+<th>Random</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>seen_test (6,059 q)</td>
+<td>in-domain</td>
+<td><strong>0.600</strong> (0.621)</td>
+<td>0.448 (0.547)</td>
+<td>0.596 (0.603)</td>
+<td>0.359</td>
+</tr>
+<tr>
+<td>dev (7,750 q)</td>
+<td>out-of-domain</td>
+<td>0.293 (0.381)</td>
+<td>0.299 (0.395)</td>
+<td><strong>0.557</strong> (0.581)</td>
+<td>0.325</td>
+</tr>
+<tr>
+<td>lockbox (2,600 q)</td>
+<td>out-of-domain</td>
+<td>0.290 (0.359)</td>
+<td>0.301 (0.387)</td>
+<td><strong>0.617</strong> (0.633)</td>
+<td>0.209</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>OpenAI never trained on any of this; all three sets are
+out-of-domain for it. VW trained on in-domain data ties it; without that
+data VW is at random level.</li>
+<li>OpenAI refused 362 of 16,409 questions (2.2%); refusals count as
+wrong.</li>
+<li><strong>Confidence:</strong> OpenAI’s most confident 25% of answers
+are 87% accurate on dev and 84% on the lockbox (VW: 45–60%). In-domain,
+VW’s margin ranks better: its top 25% are 79% accurate vs OpenAI’s
+69%.</li>
+<li><strong>Cost:</strong> 11,300 requests, 4.80M billed input tokens,
+<strong>$0.48</strong>. Billed tokens ran 1.27× the o200k estimate; a
+linear fit gives billed ≈ 1.04 × estimate + 76 tokens per request. Rate
+limits seen: 5,000 requests and 2M tokens per minute. Server processing
+time per request: median 63 ms, p90 94 ms, p99 425 ms (network time not
+included).</li>
+</ul>
+<p>GLiNER2.5-Decide: scripts ready (<code>bench/gliner_decide.py</code>,
+REPRODUCE.md step 5), not yet run; it needs a machine with more free
+memory.</p>
+<h2
+id="openai-decisions-api-cost-estimate-for-the-final-benchmark">OpenAI
+Decisions API cost estimate (for the final benchmark)</h2>
+<p><code>src/vwjev/cost_estimate.py</code>, $0.10 per 1M input tokens,
+tokens counted with o200k_base as a stand-in, one request per text:</p>
+<table>
+<thead>
+<tr>
+<th>Set</th>
+<th>Requests</th>
+<th>Tokens</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fast-decisions lockbox</td>
+<td>1,700</td>
+<td>0.38M</td>
+<td>$0.04</td>
+</tr>
+<tr>
+<td>one fold’s eval sets</td>
+<td>9–11k</td>
+<td>3.5–4.8M</td>
+<td>$0.35–0.48</td>
+</tr>
+<tr>
+<td>all 4 folds’ eval sets</td>
+<td>25k</td>
+<td>10.8M</td>
+<td>$1.08</td>
+</tr>
+<tr>
+<td>BEV test, all configs</td>
+<td>45k</td>
+<td>17.6M</td>
+<td>$1.76</td>
+</tr>
+<tr>
+<td>BEV train + test</td>
+<td>276k</td>
+<td>110M</td>
+<td>$11.03</td>
+</tr>
+</tbody>
+</table>
+<p>Largest request ≈ 5.1k tokens. Rate limits (unpublished) will matter
+more than cost.</p>
+<h2 id="planned">Planned</h2>
+<ul>
+<li>GLiNER2.5-Decide on fold 0 (lockbox + 400-text BEV samples), on a
+larger machine.</li>
+<li>Multilingual check (e.g. MASSIVE) for the “monolingual vs
+multilingual” axis.</li>
+</ul>
+<h2 id="data-and-metric-gotchas-found">Data and metric gotchas
+found</h2>
+<ul>
+<li><strong>The BEV mix leaks answers through option order.</strong> The
+right answer is listed first far more often than chance in several
+domains (Support and intent routing 47% vs 20% expected; Trap and
+adversarial reading 54% vs 22%; Civic and safety 44% vs 22%). Options
+are now shuffled for training and BEV evaluation, except score scales,
+whose order carries meaning. The lockbox shows no such bias (17% vs 17%)
+and keeps its original order.</li>
+<li><strong>Pooled macro-F1 is unstable with one-off classes.</strong>
+Some domains contain many single-row questions; a lucky guess scores F1
+= 1 on each. An untrained model reached 0.863 macro-F1 at 44% accuracy
+in the Tool domain. Classes with fewer than 5 gold examples are now left
+out of the macro average (they still count toward accuracy).</li>
+</ul>
+<h2 id="vw-gotchas-found-9.11.9-python-bindings">VW gotchas found
+(9.11.9, Python bindings)</h2>
+<ul>
+<li><code>--csoaa_ldf</code> / <code>--wap_ldf</code>
+<strong>segfault</strong> when predicting on multi-line examples with no
+labels (any variant tried, with or without a shared line). Workaround:
+give every option a dummy <code>i:0</code> cost when predicting.</li>
+<li>With <code>--csoaa_rank</code>, <code>predict()</code> returns
+scores shifted by one: the shared line is counted as an action (first
+value always 0.0, last option dropped). Likely VW core, not the Python
+wrapper. Read each option’s <code>get_partial_prediction()</code>
+instead (input order, lower = better).</li>
+<li>Reloading a model with an extra <code>-q</code>
+(<code>-i model.vw -q fl</code>) <strong>silently drops the model’s
+saved interactions</strong>. Restate them
+(<code>feedback.load_pretrained</code> does this).</li>
+<li>All three have standalone demos in <code>bug-repros/</code> (see its
+README).</li>
+<li><code>--probabilities</code> output is very flat (0.58 max on a
+perfectly separable toy), so confidence must be calibrated
+separately.</li>
+<li>A <code>--csoaa_ldf</code> model can’t be loaded with
+<code>--cb_adf</code> / <code>--cb_explore_adf</code> (“model content is
+corrupted”). Bandit feedback is therefore turned into
+<code>csoaa_ldf</code> updates in Python.</li>
+<li><code>--cb_adf</code> allows only one costed option per
+example.</li>
+<li>With all costs 0/1, <code>csoaa_ldf mc</code> trains as a classifier
+with ±1 targets; other costs switch it to plain regression, so keep
+feedback updates 0/1.</li>
+<li>Interactions can be added when reloading a model
+(<code>-i model.vw -q fl</code>); a fresh namespace starts at zero
+weight and learns from new data.</li>
+<li>System Python 3.10 has no <code>venv</code>/<code>ensurepip</code>;
+the project uses <code>uv</code>.</li>
+</ul>
+
+</body>
+</html>

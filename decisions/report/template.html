@@ -1,0 +1,708 @@
+<title>Can VW Replace Jev?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column; charts and tables break out slightly wider; everything stacks at phone width */
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --ink: #17212a;
+  --muted: #5a6772;
+  --rule: #d8dfe4;
+  --vw: #0d7a69;
+  --vw-soft: #8cc5ba;
+  --oa: #4d43c4;
+  --gl: #a8701a;
+  --rand: #98a3ac;
+  --yes: #1d7438;
+  --part: #946200;
+  --no: #b0262c;
+  --code-bg: #eaeef1;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.1875rem;
+  --step-2: 1.5rem;
+  --step-3: 2.25rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10161b; --surface: #172028; --ink: #e4e9ed; --muted: #97a4af; --rule: #2a353f;
+    --vw: #3fbfa6; --vw-soft: #2c7569; --oa: #9a91ff; --gl: #e2a64a; --rand: #6b7783;
+    --yes: #5cc47c; --part: #e0b040; --no: #f0767a; --code-bg: #1e2932;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10161b; --surface: #172028; --ink: #e4e9ed; --muted: #97a4af; --rule: #2a353f;
+  --vw: #3fbfa6; --vw-soft: #2c7569; --oa: #9a91ff; --gl: #e2a64a; --rand: #6b7783;
+  --yes: #5cc47c; --part: #e0b040; --no: #f0767a; --code-bg: #1e2932;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: var(--step-0); line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+}
+main { max-width: 940px; margin: 0 auto; display: grid; gap: 56px; }
+section { display: grid; gap: 18px; min-width: 0; }
+.prose { max-width: 68ch; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: var(--step-3); letter-spacing: -0.01em; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); font-weight: 500; }
+p { margin: 0; }
+.eyebrow { font-family: var(--font-mono); font-size: var(--step--1); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.lead { font-size: var(--step-1); max-width: 62ch; }
+.muted { color: var(--muted); }
+.small { font-size: var(--step--1); }
+code, .mono { font-family: var(--font-mono); font-size: 0.9em; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+a { color: var(--oa); }
+a:focus-visible, summary:focus-visible, button:focus-visible { outline: 2px solid var(--oa); outline-offset: 2px; }
+ul, ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+
+header { display: grid; gap: 14px; }
+
+.answer {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 20px 22px; display: grid; gap: 12px; max-width: 76ch;
+}
+.answer h2 { font-size: var(--step-1); }
+
+.table-wrap { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+th, td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; font-size: var(--step--1); color: var(--muted); letter-spacing: 0.02em; }
+td.r, th.r { text-align: right; }
+tr:last-child td { border-bottom: none; }
+.best { font-weight: 600; }
+
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.yes { color: var(--yes); }
+.pill.part { color: var(--part); }
+.pill.no { color: var(--no); }
+.pill.pending { color: var(--gl); }
+.pill.untested { color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: var(--step--1); color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key { width: 18px; height: 0; border-top: 2.5px solid; display: inline-block; }
+.key.dash { border-top-style: dashed; }
+.key.dot { border-top-style: dotted; }
+.swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+svg text { fill: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+svg .grid { stroke: var(--rule); stroke-width: 1; }
+svg .axis { stroke: var(--muted); stroke-width: 1; }
+svg .label-strong { fill: var(--ink); font-family: var(--font-body); font-size: 12.5px; }
+
+.multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 22px 26px; }
+.panel { display: grid; gap: 4px; min-width: 0; }
+.panel h3 { font-size: 0.98rem; }
+.panel .note { font-size: var(--step--1); color: var(--muted); }
+.panel svg { width: 100%; height: auto; display: block; }
+
+.dotplot svg { width: 100%; height: auto; display: block; }
+
+details { border-top: 1px solid var(--rule); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 500; color: var(--ink); }
+details[open] summary { margin-bottom: 10px; }
+
+pre { background: var(--code-bg); border-radius: 4px; padding: 12px 14px; overflow-x: auto; margin: 0; font-size: 0.8125rem; line-height: 1.5; }
+pre code { font-size: inherit; }
+.steps { display: grid; gap: 16px; counter-reset: step; padding: 0; list-style: none; }
+.steps li { display: grid; gap: 8px; min-width: 0; }
+.steps h3 { font-size: 1rem; font-weight: 600; font-family: var(--font-body); }
+.steps h3::before { counter-increment: step; content: counter(step) ". "; color: var(--muted); font-family: var(--font-mono); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; border-top: 1px solid var(--rule); }
+.fact { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 2px; align-content: start; }
+.fact .v { font-family: var(--font-mono); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.fact .k { font-size: var(--step--1); color: var(--muted); }
+
+footer { border-top: 1px solid var(--rule); padding-top: 16px; color: var(--muted); font-size: var(--step--1); }
+
+@media (max-width: 560px) {
+  body { padding-block: 24px 40px; }
+  main { gap: 44px; }
+  :root { --step-3: 1.85rem; --step-2: 1.3rem; }
+}
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Vowpal Wabbit decision-model study · OpenAI runs 19–20 Oct 2026</p>
+    <h1>Can VW replace Jev?</h1>
+    <p class="lead">Jev-style decision models answer yes/no, choice and score questions about a text, from a schema they have never seen. We tested whether Vowpal Wabbit (VW), a fast linear learner, can do that job. We compared it with OpenAI's Decisions API on the same questions.</p>
+  </header>
+
+  <div class="answer">
+    <h2>Short answer</h2>
+    <ul>
+      <li><strong>Not as a drop-in replacement.</strong> On domains it has not trained on, VW scores about as well as random guessing. OpenAI, with no training at all, scores <span class="num" data-v="oa.dev"></span> and <span class="num" data-v="oa.lockbox"></span> macro-F1 on the two unseen sets.</li>
+      <li><strong>Close behind, as an in-domain learner.</strong> Trained on a domain's own labeled data, VW gets within reach of OpenAI but stays behind it (<span class="num" data-v="vw.seen"></span> vs <span class="num" data-v="oa.seen"></span>). It runs at about half a millisecond per question on a laptop-class CPU, at no per-call cost.</li>
+      <li><strong>With feedback, only for some tasks.</strong> Tasks that hinge on keywords or a dataset's own labeling habits learn fast. Spam goes from 0.51 to 0.91 after 100 corrections, level with OpenAI, and to 0.95 after 400. Judgment and reasoning tasks stay far below OpenAI even after 3,200 corrections.</li>
+      <li><strong>As a cheap first tier behind OpenAI, sometimes.</strong> Starting with no labels, VW can learn from OpenAI's answers and take over the texts it is confident about. For spam-like tasks it takes most of the traffic with no quality loss. For judgment tasks it takes almost none. It pays for itself only at sizeable volume (see "Cold start").</li>
+    </ul>
+  </div>
+
+  <section>
+    <h2>When VW is good enough</h2>
+    <p class="prose muted">"Good enough" here means usable for low-stakes decisions, like routing a query to a cheaper or stronger LLM.</p>
+    <div class="table-wrap">
+      <table id="situations">
+        <thead><tr><th>Situation</th><th>Use VW?</th><th>Evidence</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>In-domain vs out-of-domain</h2>
+    <p class="prose">Every model is scored on the same questions. <strong>In-domain</strong> means VW trained on other texts from the same domains (a median of <span class="num" data-v="trainMedian"></span> labeled questions per domain). <strong>Out-of-domain</strong> means VW never saw the domain. OpenAI never trained on any of this data, so every set is out-of-domain for it.</p>
+    <div class="legend" id="dot-legend"></div>
+    <div class="dotplot" id="dotplot"></div>
+    <div class="table-wrap">
+      <table id="main-table"></table>
+    </div>
+    <p class="small muted prose">Macro-F1 with accuracy in brackets; higher is better. "VW full" reads the text's words; "VW generic" uses only vocabulary-free match features. OpenAI's refusals count as wrong (<span class="num" data-v="refusals"></span> of <span class="num" data-v="nq"></span> questions). Across all four domain folds, VW full scores <span class="num" data-v="ff.full.dev"></span> on unseen domains against random's <span class="num" data-v="ff.rand.dev"></span>, and <span class="num" data-v="ff.full.seen"></span> in-domain.</p>
+    <details>
+      <summary>Per-domain scores</summary>
+      <div class="table-wrap"><table id="domain-table"></table></div>
+    </details>
+  </section>
+
+  <section>
+    <h2>Learning from data</h2>
+    <p class="prose">A product with a feedback button gets labeled examples over time. Here each model starts on a domain it never trained on, answers one question at a time, and gets feedback after each answer. <strong>Corrections</strong> means the user supplies the right answer. <strong>Right/wrong</strong> means the user only says whether the answer was right. The dashed line is OpenAI's zero-shot score on the same test rows.</p>
+    <div class="legend">
+      <span><i class="key" style="border-color:var(--vw)"></i>VW pre-trained, corrections</span>
+      <span><i class="key dash" style="border-color:var(--vw)"></i>VW from scratch, corrections</span>
+      <span><i class="key dot" style="border-color:var(--vw)"></i>VW pre-trained, right/wrong only</span>
+      <span><i class="key dash" style="border-color:var(--oa)"></i>OpenAI, no training</span>
+    </div>
+    <h3>BEV domains VW never trained on</h3>
+    <p class="small muted">Macro-F1 on each domain's held-out test rows after <em>n</em> labeled examples (log scale).</p>
+    <div class="multiples" id="bev-curves"></div>
+    <h3>Lockbox (fast-decisions)</h3>
+    <p class="small muted prose">The lockbox has 100 texts per domain, so it supports up to 50 learning texts per domain. Pooled over 17 domains and 10 random splits per domain. Macro-F1 on the held-out half.</p>
+    <div class="panel" id="lockbox-curve" style="max-width: 560px"></div>
+    <details>
+      <summary>Lockbox, per domain, after 50 texts</summary>
+      <div class="table-wrap"><table id="lockbox-domains"></table></div>
+    </details>
+  </section>
+
+  <section id="cascade" hidden>
+    <h2>Cold start: OpenAI first, then VW</h2>
+    <p class="prose">This simulates a product that starts with no labeled data. At first every text goes to OpenAI, and VW learns from OpenAI's answers in the background. Later VW answers the texts it is sure about, and the rest still go to OpenAI. We ran it on the 7 BEV domains VW never trained on, with <span class="num" data-v="cc.minTexts"></span>–<span class="num" data-v="cc.maxTexts"></span> texts per domain arriving in random order, 3 different orders each. True labels are used only to score what users received, never for training.</p>
+    <div class="answer" id="cc-answers"><h2>What the simulation says</h2><ul></ul></div>
+    <h3>Routing rules compared</h3>
+    <p class="small muted prose">Mean over the 7 domains. "Share to OpenAI" is the share of texts sent to OpenAI. "Later on" is the last 1,000 texts of each stream, once VW has learned what it can. Macro-F1 is of the answers users received.</p>
+    <div class="table-wrap"><table id="cc-rules"></table></div>
+    <details>
+      <summary>Every rule, per domain</summary>
+      <div class="table-wrap"><table id="cc-domains"></table></div>
+    </details>
+    <h3>Per domain, with the confidence rule</h3>
+    <p class="small muted prose"><strong>Accuracy</strong>, not macro-F1: on short stretches of the stream, macro-F1 drops rare answers and jumps around. Solid line: accuracy of what users received under the <span data-v="cc.ruleName"></span> rule. Dashed teal: VW alone, learning from OpenAI's answers. Dashed indigo: OpenAI alone. Bars: share of texts sent to OpenAI in each stretch of the stream. Log scale.</p>
+    <div class="legend">
+      <span><i class="key" style="border-color:var(--vw)"></i>served (rule)</span>
+      <span><i class="key dash" style="border-color:var(--vw)"></i>VW alone, learning from OpenAI</span>
+      <span><i class="key dash" style="border-color:var(--oa)"></i>OpenAI alone</span>
+      <span><i class="swatch" style="background:var(--oa); opacity:.18; border-radius:1px"></i>share to OpenAI</span>
+    </div>
+    <div class="multiples" id="cc-curves"></div>
+    <h3>Cost of ownership</h3>
+    <div class="prose" id="cc-tco-intro"></div>
+    <div class="table-wrap"><table id="cc-tco"></table></div>
+    <p class="small muted prose" id="cc-tco-notes"></p>
+  </section>
+
+  <section>
+    <h2>Can you trust the confidence?</h2>
+    <p class="prose">For routing, a model is useful if it knows when it is right: confident answers get acted on, the rest go to a stronger model. Each line shows accuracy when only the model's most confident answers are kept. OpenAI reports a probability; VW's confidence is the score gap between its top two options.</p>
+    <div class="legend">
+      <span><i class="key" style="border-color:var(--oa)"></i>OpenAI</span>
+      <span><i class="key" style="border-color:var(--vw)"></i>VW full</span>
+      <span><i class="key dash" style="border-color:var(--vw)"></i>VW generic</span>
+    </div>
+    <div class="multiples" id="selective"></div>
+  </section>
+
+  <section>
+    <h2>Cost and speed</h2>
+    <div class="facts" id="facts"></div>
+    <p class="small muted prose">OpenAI charges $0.10 per million input tokens. Server time comes from OpenAI's response headers and excludes the network. VW time is for scoring only, measured single-threaded on the 4-core test machine.</p>
+  </section>
+
+  <section>
+    <h2>How this was measured</h2>
+    <div class="prose" style="display:grid; gap:12px">
+      <p><strong>Data.</strong> The <em>BEV Decision Mix</em> (<code>avbiswas/bev-decision</code>) is a third-party collection of about 276,000 texts and 502,000 questions in Jev's question format, across 28 domains. The <em>lockbox</em> is Fastino's <code>fast-decisions</code> dev split: 17 domains × 100 texts. It is a separate, synthetic and deliberately tricky set, and was never used for training or tuning.</p>
+      <p><strong>Splits.</strong> BEV's domains are split into 4 folds. In each fold, VW trains on three quarters of the domains and is tested on the held-out quarter (out-of-domain) and on unseen texts from its training domains (in-domain). The OpenAI comparison uses fold 0.</p>
+      <p><strong>Metric.</strong> Macro-F1 averages the F1 score of each answer class, so rare answers count as much as common ones. It is pooled within each domain, then averaged over domains. Classes with fewer than 5 examples are left out. Accuracy is shown alongside.</p>
+      <p><strong>Fairness.</strong> OpenAI got the same text (cut at 4,000 characters), the same question wording and option descriptions, and the same option order as VW. Multi-label questions were left out because OpenAI's API has no multi-select.</p>
+      <p><strong>Caveats.</strong></p>
+      <ul>
+        <li><strong>One fold, one model version:</strong> OpenAI ran on one fold and one model version (<code>gpt-6-luna</code>, 19 Oct 2026).</li>
+        <li><strong>Bias removed:</strong> BEV lists the right answer first far more often than chance, so options were shuffled for every model.</li>
+        <li><strong>English only:</strong> the multilingual case is untested.</li>
+        <li><strong>GLiNER2.5-Decide pending:</strong> it is set up but not yet run; it needs a machine with more free memory.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Reproduce it</h2>
+    <p class="prose muted">Full detail, expected numbers and timings are in <code>REPRODUCE.md</code> in the repo. Every command runs from the repo root.</p>
+    <ol class="steps">
+      <li><h3>Install and fetch data</h3>
+<pre><code>uv sync
+uv run python -I -m vwjev.download     # both datasets, pinned revisions
+uv run python -I -m vwjev.data         # unified question format
+uv run python -I -m vwjev.splits       # 4 domain folds</code></pre></li>
+      <li><h3>Train VW zero-shot models (per fold; fold 0 shown)</h3>
+<pre><code>uv run python -I -m vwjev.run --fold 0 --name v5_full_shuf    --vw "-q tl -q ql -q sl -q tp -q qp -q qm"
+uv run python -I -m vwjev.run --fold 0 --name v6_generic_shuf --vw "-q sl -q qm -q qp --ignore t"</code></pre></li>
+      <li><h3>Score with OpenAI (about $0.50; key in .env)</h3>
+<pre><code>uv run python -I -m vwjev.openai_decide --sets lockbox dev seen_test --name luna_f0 --key-file .env --budget 1.2
+uv run python -I -m vwjev.openai_report --name luna_f0</code></pre></li>
+      <li><h3>Simulate learning from feedback</h3>
+<pre><code>uv run python -I -m vwjev.feedback --model runs/v6_generic_shuf --domain "Spam detection"   # one per held-out domain
+uv run python -I -m vwjev.lockbox_curve --model runs/v6_generic_shuf --openai luna_f0</code></pre></li>
+      <li><h3>Simulate the cold-start cascade (about $0.77 of OpenAI calls)</h3>
+<pre><code>uv run python -I -m vwjev.openai_decide --sets stream --name luna_f0 --key-file .env --budget 0.95
+uv run python -I -m vwjev.cascade prepare
+./scripts/cascade_all.sh
+uv run python -I -m vwjev.cascade_report</code></pre></li>
+      <li><h3>Collect the numbers and build this page</h3>
+<pre><code>uv run python -I -m vwjev.final_report
+uv run python -I -m vwjev.build_report_page</code></pre></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>VW issues found along the way</h2>
+    <p class="prose muted">Each has a standalone demo in <code>bug-repros/</code> (vowpalwabbit 9.11.9, Python bindings).</p>
+    <ul class="prose">
+      <li><strong>Crash on unlabeled multi-line predict.</strong> <code>--csoaa_ldf</code> and <code>--wap_ldf</code> segfault when predicting on examples without cost labels. Workaround: dummy <code>i:0</code> costs.</li>
+      <li><strong>Shifted rank scores.</strong> With <code>--csoaa_rank</code>, <code>predict()</code> counts the shared line as an option, so the scores are shifted by one. Workaround: read each option's partial prediction.</li>
+      <li><strong>Reloading with a new <code>-q</code> drops the saved interactions.</strong> It does so silently. This corrupted our first feedback curves, which were rerun; the conclusions held.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Built from <code>runs/final_report.json</code> and <code>runs/cascade/report.json</code> by <code>vwjev.build_report_page</code>. GLiNER2.5-Decide results will be added when they are run.</p>
+  </footer>
+</main>
+
+<script>
+const D = /*__DATA__*/null;
+
+const f3 = x => (x == null || Number.isNaN(x)) ? "–" : x.toFixed(3);
+const f2 = x => (x == null || Number.isNaN(x)) ? "–" : x.toFixed(2);
+const pct = x => Math.round(x * 100) + "%";
+const T = D.tables;
+const OA = "OpenAI gpt-6-luna";
+const NS = "http://www.w3.org/2000/svg";
+const hasGliner = !!(T.lockbox_gliner_rows);
+
+function el(tag, attrs = {}, parent) {
+  const isSvg = ["svg","g","line","path","text","circle","rect","polyline"].includes(tag);
+  const e = isSvg ? document.createElementNS(NS, tag) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "text") e.textContent = v; else if (k === "html") e.innerHTML = v; else e.setAttribute(k, v);
+  }
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+// inline numbers in prose
+const V = {
+  "oa.dev": f3(T.dev.models[OA].macro_f1), "oa.lockbox": f3(T.lockbox.models[OA].macro_f1),
+  "oa.seen": f3(T.seen_test.models[OA].macro_f1), "vw.seen": f3(T.seen_test.models["VW full"].macro_f1),
+  "trainMedian": D.trainMedian.toLocaleString("en-US"),
+  "refusals": D.refusals.toLocaleString("en-US"), "nq": D.nq.toLocaleString("en-US"),
+  "ff.full.dev": f3(D.four_fold["VW full"].dev), "ff.rand.dev": f3(D.four_fold.Random.dev),
+  "ff.full.seen": f3(D.four_fold["VW full"].seen_test),
+};
+document.querySelectorAll("[data-v]").forEach(n => { if (n.dataset.v in V) n.textContent = V[n.dataset.v]; });
+
+// situations
+const C = D.curves;
+const at = (dom, key, n) => { const p = C[dom].curves[key].find(p => p.n === n); return p ? p.macro_f1 : null; };
+const last = (dom, key) => C[dom].curves[key].at(-1);
+const situations = [
+  ["New schema, no labeled data (zero-shot)", "no", "No",
+   `Unseen BEV domains: VW ${f3(T.dev.models["VW generic"].macro_f1)} vs random ${f3(T.dev.models.Random.macro_f1)}; OpenAI ${f3(T.dev.models[OA].macro_f1)}. Lockbox: VW ${f3(T.lockbox.models["VW generic"].macro_f1)}, OpenAI ${f3(T.lockbox.models[OA].macro_f1)}.`],
+  ["Thousands of labeled examples in the domain", "part", "Partly",
+   `In-domain VW full ${f3(T.seen_test.models["VW full"].macro_f1)} vs OpenAI ${f3(T.seen_test.models[OA].macro_f1)}: behind, but at about 0.5 ms per question and no API cost. VW wins on some domains (browser interaction, engagement ranking).`],
+  ["Yes/no or keyword-driven task, 100–400 corrections", "yes", "Yes",
+   `Spam: ${f2(at("Spam detection","pretrained/correction",0))} cold, ${f2(at("Spam detection","pretrained/correction",25))} after 25, ${f2(at("Spam detection","pretrained/correction",100))} after 100, ${f2(at("Spam detection","pretrained/correction",400))} after 400; OpenAI ${f2(C["Spam detection"].openai)}. Right/wrong-only feedback works almost as well here.`],
+  ["Ratings with a dataset-specific scale, about 1,000 corrections", "part", "Marginal",
+   `Sensory quality: ${f2(last("Sensory quality rating","pretrained/correction").macro_f1)} after ${last("Sensory quality rating","pretrained/correction").n.toLocaleString("en-US")} vs OpenAI ${f2(C["Sensory quality rating"].openai)}. Both are low.`],
+  ["Multi-option routing (tools, intents) with feedback", "part", "Partly",
+   `Tool and workflow: ${f2(at("Tool and workflow decisions","pretrained/correction",100))} after 100, ${f2(at("Tool and workflow decisions","pretrained/correction",3200))} after 3,200; OpenAI ${f2(C["Tool and workflow decisions"].openai)}. Lockbox routing domains stay near 0.3 after 50 texts.`],
+  ["Judgment and reasoning (rules, preferences, probabilities)", "no", "No",
+   `After 3,200 corrections: rule-conditioned ${f2(at("Rule-conditioned decisions","pretrained/correction",3200))} vs OpenAI ${f2(C["Rule-conditioned decisions"].openai)}; response preference ${f2(at("Response preference and quality","pretrained/correction",3200))} vs ${f2(C["Response preference and quality"].openai)}.`],
+  ["Many labels with few examples each", "no", "No",
+   `Lockbox after 50 texts: banking intent ${f2(D.lockbox_curve.curves["pretrained/correction"].at(-1).domains.banking_intent)} vs OpenAI ${f2(D.lockbox_curve.openai.domains.banking_intent)}; support topic ${f2(D.lockbox_curve.curves["pretrained/correction"].at(-1).domains.support_topic)} vs ${f2(D.lockbox_curve.openai.domains.support_topic)}.`],
+  ...(D.cascade ? [["No labels; OpenAI answers first, VW takes over when confident", "part", "Partly",
+   (() => { const P = D.cascade.domains, R = D.cascade.cost_model.policy, g = d => P[d] ? pct(1 - P[d].policies[R].late_openai_share) : "–";
+     return `Share moved to VW later on: spam ${g("Spam detection")}, tool routing ${g("Tool and workflow decisions")}, sensory ${g("Sensory quality rating")}, calibrated probability ${g("Calibrated probability")}, rule-conditioned ${g("Rule-conditioned decisions")}, sentiment ${g("Sentiment, emotion, and moderation")}, response preference ${g("Response preference and quality")}.`; })()]] : []),
+  ["Non-English text", "untested", "Untested", "All data here is English."],
+];
+const stb = document.querySelector("#situations tbody");
+for (const [s, cls, word, ev] of situations) {
+  const tr = el("tr", {}, stb);
+  el("td", { text: s }, tr);
+  el("td", { html: `<span class="pill ${cls}">${word}</span>` }, tr);
+  el("td", { text: ev, class: "small" }, tr);
+}
+
+// dot plot
+const MODELS = [
+  { key: "Random", label: "Random", color: "var(--rand)" },
+  { key: "VW generic", label: "VW generic", color: "var(--vw-soft)" },
+  { key: "VW full", label: "VW full", color: "var(--vw)" },
+  { key: OA, label: "OpenAI", color: "var(--oa)" },
+];
+const SETS = [
+  { key: "seen_test", label: "BEV, trained domains", tag: "VW in-domain" },
+  { key: "dev", label: "BEV, 7 unseen domains", tag: "VW out-of-domain" },
+  { key: "lockbox", label: "Lockbox, 17 domains", tag: "VW out-of-domain" },
+];
+(function legend() {
+  const lg = document.getElementById("dot-legend");
+  for (const m of MODELS) el("span", { html: `<i class="swatch" style="background:${m.color}"></i>${m.label}` }, lg);
+  if (!hasGliner) el("span", { html: `<span class="pill pending">GLiNER2.5-Decide pending</span>` }, lg);
+})();
+(function dotplot() {
+  const W = 760, L = 190, R = 24, rowH = 54, top = 16, H = top + rowH * SETS.length + 30;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Macro-F1 by model and evaluation set" }, document.getElementById("dotplot"));
+  const x = v => L + v * (W - L - R);
+  for (const t of [0, 0.2, 0.4, 0.6, 0.8, 1]) {
+    el("line", { x1: x(t), x2: x(t), y1: top - 6, y2: H - 26, class: "grid" }, svg);
+    el("text", { x: x(t), y: H - 10, "text-anchor": "middle", text: t.toFixed(1) }, svg);
+  }
+  el("text", { x: W - R, y: H - 10 + 0, "text-anchor": "end", text: "" }, svg);
+  SETS.forEach((s, i) => {
+    const y = top + i * rowH + rowH / 2;
+    el("text", { x: 0, y: y - 3, class: "label-strong", text: s.label }, svg);
+    el("text", { x: 0, y: y + 13, text: s.tag }, svg);
+    const vals = MODELS.map(m => T[s.key].models[m.key].macro_f1);
+    el("line", { x1: x(Math.min(...vals)), x2: x(Math.max(...vals)), y1: y, y2: y, stroke: "var(--rule)", "stroke-width": 3 }, svg);
+    MODELS.forEach((m, j) => {
+      el("circle", { cx: x(vals[j]), cy: y, r: 7, fill: m.color, stroke: "var(--surface)", "stroke-width": 1.5 }, svg);
+    });
+    const oa = vals[3];
+    el("text", { x: x(oa), y: y - 12, "text-anchor": "middle", fill: "var(--oa)", style: "fill:var(--oa)", text: f3(oa) }, svg);
+    const vw = vals[2];
+    el("text", { x: x(vw), y: y + 22, "text-anchor": "middle", style: "fill:var(--vw)", text: f3(vw) }, svg);
+  });
+})();
+
+// main table
+(function mainTable() {
+  const t = document.getElementById("main-table");
+  const head = el("tr", {}, el("thead", {}, t));
+  el("th", { text: "Evaluation set" }, head);
+  el("th", { text: "Questions", class: "r" }, head);
+  for (const m of [...MODELS].reverse()) el("th", { text: m.label, class: "r" }, head);
+  if (!hasGliner) el("th", { text: "GLiNER2.5-Decide", class: "r" }, head);
+  const tb = el("tbody", {}, t);
+  for (const s of SETS) {
+    const tr = el("tr", {}, tb);
+    el("td", { html: `${s.label}<br><span class="small muted">${s.tag}</span>` }, tr);
+    el("td", { text: T[s.key].n_questions.toLocaleString("en-US"), class: "r num" }, tr);
+    const best = Math.max(...MODELS.map(m => T[s.key].models[m.key].macro_f1));
+    for (const m of [...MODELS].reverse()) {
+      const v = T[s.key].models[m.key];
+      el("td", { html: `${f3(v.macro_f1)}<br><span class="small muted">(${f3(v.acc)})</span>`, class: "r num" + (v.macro_f1 === best ? " best" : "") }, tr);
+    }
+    if (!hasGliner) el("td", { html: `<span class="pill pending">pending</span>`, class: "r" }, tr);
+  }
+})();
+
+// per-domain table
+(function domainTable() {
+  const t = document.getElementById("domain-table");
+  const head = el("tr", {}, el("thead", {}, t));
+  for (const h of ["Domain", "Set", "Questions", "OpenAI", "VW full", "VW generic"]) el("th", { text: h, class: ["Domain","Set"].includes(h) ? "" : "r" }, head);
+  const tb = el("tbody", {}, t);
+  for (const s of SETS) {
+    const doms = Object.keys(T[s.key].models[OA].domains).sort();
+    for (const d of doms) {
+      const tr = el("tr", {}, tb);
+      el("td", { text: d.replaceAll("_", " ") }, tr);
+      el("td", { text: s.tag, class: "small muted" }, tr);
+      el("td", { text: T[s.key].models[OA].domains[d].n, class: "r num" }, tr);
+      const vals = [OA, "VW full", "VW generic"].map(m => T[s.key].models[m].domains[d]?.macro_f1);
+      const best = Math.max(...vals.filter(v => v != null && !Number.isNaN(v)));
+      for (const v of vals) el("td", { text: f3(v), class: "r num" + (v === best ? " best" : "") }, tr);
+    }
+  }
+})();
+
+// generic line chart
+function lineChart(parent, { series, ref, xOf, xTicks, xLabel, yMax = 1, yTicks = [0, 0.25, 0.5, 0.75, 1], yFmt = v => v.toFixed(2), xMax, bars = [] }) {
+  const W = 320, H = 200, L = 34, R = 10, T0 = 10, B = 34;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" }, parent);
+  const yMin = yTicks[0];
+  const x = v => L + (xOf(v) / xMax) * (W - L - R);
+  const y = v => T0 + (1 - (v - yMin) / (yMax - yMin)) * (H - T0 - B);
+  for (const t of yTicks) {
+    el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "grid" }, svg);
+    el("text", { x: L - 5, y: y(t) + 3.5, "text-anchor": "end", text: yFmt(t) }, svg);
+  }
+  // shaded bars (0..1 of the plot height), drawn under the lines
+  for (const b of bars) {
+    const x0 = x(b.x0), x1 = Math.min(x(b.x1), W - R), top = y(yMin + b.y * (yMax - yMin));
+    el("rect", { x: x0, y: top, width: Math.max(0, x1 - x0 - 1), height: y(yMin) - top, fill: "var(--oa)", opacity: 0.16 }, svg);
+  }
+  for (const t of xTicks) el("text", { x: x(t.v), y: H - B + 15, "text-anchor": "middle", text: t.label }, svg);
+  el("text", { x: L + (W - L - R) / 2, y: H - 4, "text-anchor": "middle", text: xLabel }, svg);
+  if (ref != null) el("line", { x1: L, x2: W - R, y1: y(ref), y2: y(ref), stroke: "var(--oa)", "stroke-width": 2, "stroke-dasharray": "5 4" }, svg);
+  for (const s of series) {
+    const pts = s.points.filter(p => p.y != null && !Number.isNaN(p.y));
+    el("polyline", { points: pts.map(p => `${x(p.x)},${y(p.y)}`).join(" "), fill: "none", stroke: s.color, "stroke-width": s.width || 2, "stroke-dasharray": s.dash || "", "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    const e = pts.at(-1);
+    if (s.endDot && e) el("circle", { cx: x(e.x), cy: y(e.y), r: 3.2, fill: s.color }, svg);
+  }
+  return svg;
+}
+
+// BEV curves (log scale; x = 0 at n = 0, 1 at n = 25, +1 per doubling)
+const xLog = n => n === 0 ? 0 : 1 + Math.log2(n / 25);
+const bevOrder = Object.keys(C).sort((a, b) => (C[b].openai ?? 0) - (C[a].openai ?? 0));
+for (const dom of bevOrder) {
+  const c = C[dom];
+  const panel = el("div", { class: "panel" }, document.getElementById("bev-curves"));
+  el("h3", { text: dom }, panel);
+  const pc = c.curves["pretrained/correction"];
+  const endP = pc.at(-1);
+  el("p", { class: "note num", text: `cold ${f2(pc[0].macro_f1)} → ${f2(endP.macro_f1)} after ${endP.n.toLocaleString("en-US")} · OpenAI ${f2(c.openai)}` }, panel);
+  lineChart(panel, {
+    xOf: xLog, xMax: 8, xLabel: "labeled examples",
+    xTicks: [0, 25, 100, 400, 1600].map(v => ({ v, label: v.toLocaleString("en-US") })),
+    ref: c.openai,
+    series: [
+      { points: c.curves["pretrained/bandit"].map(p => ({ x: p.n, y: p.macro_f1 })), color: "var(--vw)", dash: "1.5 3.5", width: 2 },
+      { points: c.curves["scratch/correction"].map(p => ({ x: p.n, y: p.macro_f1 })), color: "var(--vw)", dash: "5 3", width: 1.6 },
+      { points: pc.map(p => ({ x: p.n, y: p.macro_f1 })), color: "var(--vw)", width: 2.4, endDot: true },
+    ],
+  });
+}
+
+// lockbox curve
+(function lockbox() {
+  const lc = D.lockbox_curve;
+  const p = document.getElementById("lockbox-curve");
+  const pc = lc.curves["pretrained/correction"], sc = lc.curves["scratch/correction"];
+  el("p", { class: "note num", text: `pre-trained ${f3(pc[0].macro_f1)} → ${f3(pc.at(-1).macro_f1)} · from scratch ${f3(sc[0].macro_f1)} → ${f3(sc.at(-1).macro_f1)} · OpenAI ${f3(lc.openai.macro_f1)}` }, p);
+  lineChart(p, {
+    xOf: n => n, xMax: 50, xLabel: "labeled texts per domain",
+    xTicks: [0, 10, 20, 30, 40, 50].map(v => ({ v, label: String(v) })),
+    ref: lc.openai.macro_f1,
+    series: [
+      { points: lc.curves["pretrained/bandit"].map(q => ({ x: q.n, y: q.macro_f1 })), color: "var(--vw)", dash: "1.5 3.5" },
+      { points: sc.map(q => ({ x: q.n, y: q.macro_f1 })), color: "var(--vw)", dash: "5 3", width: 1.6 },
+      { points: pc.map(q => ({ x: q.n, y: q.macro_f1 })), color: "var(--vw)", width: 2.4, endDot: true },
+    ],
+  });
+  const t = document.getElementById("lockbox-domains");
+  const head = el("tr", {}, el("thead", {}, t));
+  for (const h of ["Domain", "VW, no data", "VW pre-trained, 50", "VW scratch, 50", "OpenAI"]) el("th", { text: h, class: h === "Domain" ? "" : "r" }, head);
+  const tb = el("tbody", {}, t);
+  for (const d of Object.keys(lc.openai.domains).sort()) {
+    const tr = el("tr", {}, tb);
+    el("td", { text: d.replaceAll("_", " ") }, tr);
+    const vals = [pc[0].domains[d], pc.at(-1).domains[d], sc.at(-1).domains[d], lc.openai.domains[d]];
+    const best = Math.max(...vals.filter(v => v != null));
+    for (const v of vals) el("td", { text: f2(v), class: "r num" + (v === best ? " best" : "") }, tr);
+  }
+})();
+
+// selective accuracy
+(function sel() {
+  const host = document.getElementById("selective");
+  const sets = [["seen_test", "BEV, trained domains (VW in-domain)"], ["dev", "BEV, unseen domains"], ["lockbox", "Lockbox"]];
+  for (const [k, title] of sets) {
+    const panel = el("div", { class: "panel" }, host);
+    el("h3", { text: title }, panel);
+    const S = D.selective[k];
+    const fr = Object.keys(S[OA]).map(Number).sort((a, b) => a - b);
+    el("p", { class: "note num", text: `top 25%: OpenAI ${pct(S[OA]["0.25"])} · VW full ${pct(S["VW full"]["0.25"])} · VW generic ${pct(S["VW generic"]["0.25"])}` }, panel);
+    lineChart(panel, {
+      xOf: v => v, xMax: 1, xLabel: "share of answers kept (most confident first)",
+      xTicks: [0.1, 0.25, 0.5, 0.75, 1].map(v => ({ v, label: pct(v) })),
+      yTicks: [0.2, 0.4, 0.6, 0.8, 1], yMax: 1, yFmt: v => pct(v),
+      series: [
+        { points: fr.map(f => ({ x: f, y: S["VW generic"][String(f)] })), color: "var(--vw)", dash: "5 3", width: 1.6 },
+        { points: fr.map(f => ({ x: f, y: S["VW full"][String(f)] })), color: "var(--vw)", width: 2.2, endDot: true },
+        { points: fr.map(f => ({ x: f, y: S[OA][String(f)] })), color: "var(--oa)", width: 2.2, endDot: true },
+      ],
+    });
+  }
+})();
+
+// cold-start cascade: rules shown in the main table, and the answers box
+const CC_SHOWN = ["openai", "warmup:200:0", "warmup:400:0.1", "warmup:1600:0.1", "gate:0.8:0.05", "gate:0.9:0.02", "gate:0.9:0.05", "gate:0.9:0.2", "gate:0.95:0.05"];
+function CC_ANSWERS(CC, ruleName, pc0, usd) {
+  const M = CC.mean, CM = CC.cost_model, R = CM.policy, doms = Object.keys(CC.domains);
+  const med = xs => { const v = xs.filter(x => x != null).sort((a, b) => a - b); return v.length === xs.length ? v[Math.floor(v.length / 2)] : null; };
+  const short = { "Spam detection": "spam", "Tool and workflow decisions": "tool routing", "Sentiment, emotion, and moderation": "sentiment",
+    "Rule-conditioned decisions": "rule-conditioned", "Calibrated probability": "calibrated probability", "Sensory quality rating": "sensory ratings",
+    "Response preference and quality": "response preference" };
+  const starts = doms.map(d => [d, med(CC.domains[d].policies[R].first_vw_text), CC.domains[d].policies[R].late_openai_share])
+    .sort((a, b) => (a[1] ?? 1e9) - (b[1] ?? 1e9));
+  const startTxt = starts.map(([d, n, sh]) => n == null ? `never for ${short[d]}` : `after about ${(Math.round(n / 50) * 50 || 50).toLocaleString("en-US")} texts for ${short[d]} (then ${pc0(1 - sh)} of texts go to VW)`).join(", ");
+  const lo = "gate:0.9:0.02", hi = "gate:0.9:0.2";
+  const vw = (d, pol) => CC.domains[d].policies[pol].windows.at(-1).vw_acc;
+  const gap = doms.map(d => vw(d, "gold") - vw(d, "openai"));
+  const sp = CC.domains["Spam detection"]?.policies[R];
+  return [
+    `<strong>How many OpenAI answers before VW takes over?</strong> No fixed number works. A fixed warm-up then all-VW loses a lot: even after 1,600 OpenAI answers, later-on macro-F1 drops from <span class="num">${f3(M.openai.late_served_f1)}</span> to <span class="num">${f3(M["warmup:1600:0"].late_served_f1)}</span>. A confidence rule works: VW answers a text only when, on past OpenAI calls at that confidence, it agreed with OpenAI at least 90% of the time. With that rule VW starts answering ${startTxt}.`,
+    `<strong>What it costs in quality.</strong> Later on, the "${ruleName(R)}" rule sends <span class="num">${pc0(M[R].late_openai_share)}</span> of texts to OpenAI and serves macro-F1 <span class="num">${f3(M[R].late_served_f1)}</span>, against <span class="num">${f3(M.openai.late_served_f1)}</span> for always-OpenAI. ` +
+      (sp ? `On spam it beats OpenAI (<span class="num">${f3(sp.late_served_f1)}</span> vs <span class="num">${f3(CC.domains["Spam detection"].policies.openai.late_served_f1)}</span>) while sending only <span class="num">${pc0(sp.late_openai_share)}</span> to OpenAI. ` : "") +
+      `A 95% target gives up less quality but moves less work; an 80% target moves more and loses more.`,
+    `<strong>How often to re-check with OpenAI?</strong> In a steady stream, 2–5% random audits are enough. Going from 2% to 20% raises the later-on share sent to OpenAI from <span class="num">${pc0(M[lo].late_openai_share)}</span> to <span class="num">${pc0(M[hi].late_openai_share)}</span>, for macro-F1 <span class="num">${f3(M[lo].late_served_f1)}</span> → <span class="num">${f3(M[hi].late_served_f1)}</span>. Audits matter most for catching change (new kinds of text, an edited schema), which this simulation does not include. Size them by count rather than share: about 200 audits per period measure agreement to within ±4 points, so at high volume a fraction of a percent is enough.`,
+    `<strong>Does learning from OpenAI's answers hold VW back?</strong> Somewhat. Learning from true labels instead would raise VW's accuracy at the end of the stream by up to <span class="num">${Math.round(Math.max(...gap) * 100)}</span> points (${short[doms[gap.indexOf(Math.max(...gap))]]}), and by <span class="num">${Math.round(gap[doms.indexOf("Tool and workflow decisions")] * 100)}</span> on tool routing. Most of the gap to OpenAI is VW's own limit, not label quality.`,
+    `<strong>When does it pay?</strong> At about <span class="num">$${Math.round(CM.tokens_per_text * CM.assumptions.price_per_m)}</span> per million texts, moving <span class="num">${pc0(1 - CM.late_openai_share)}</span> of calls to VW covers ${usd(CM.assumptions.eng_monthly)} a month of upkeep once spend on decision calls passes about <span class="num">${usd(Math.round(CM.break_even_spend / 500) * 500)}</span> a month. That is above the median company's whole AI bill in Ramp's data, and far below $100K a month, where it would save about <span class="num">${usd(CM.scenarios.find(s => s.spend === 100000).net_monthly)}</span> a month net. The case is strongest for keyword-like tasks such as spam, and weakest for judgment tasks, where almost nothing moves.`,
+  ];
+}
+
+// cold-start cascade (vwjev.cascade_report)
+(function cascade() {
+  const CC = D.cascade;
+  if (!CC) return;
+  document.getElementById("cascade").hidden = false;
+  const doms = Object.keys(CC.domains);
+  const CM = CC.cost_model;
+  const RULE = CM.policy;
+  const pc0 = x => x == null ? "–" : Math.round(x * 100) + "%";
+  const usd = x => "$" + Math.round(x).toLocaleString("en-US");
+  const ruleName = p => {
+    const [k, a, r] = p.split(":");
+    if (k === "openai") return "Always OpenAI";
+    if (k === "gold") return "Always OpenAI (VW learns from true labels)";
+    const audits = +r ? `, ${Math.round(+r * 100)}% audits` : "";
+    if (k === "warmup") return `OpenAI for the first ${(+a).toLocaleString("en-US")} texts, then VW${audits}`;
+    return `VW when confident (${Math.round(+a * 100)}% agreement target)${audits}`;
+  };
+  const set = (k, v) => document.querySelectorAll(`[data-v="${k}"]`).forEach(n => n.textContent = v);
+  const ns = doms.map(d => CC.domains[d].n_texts);
+  set("cc.minTexts", Math.min(...ns).toLocaleString("en-US"));
+  set("cc.maxTexts", Math.max(...ns).toLocaleString("en-US"));
+  set("cc.ruleName", `"${ruleName(RULE)}"`);
+
+  // answers
+  const ul = document.querySelector("#cc-answers ul");
+  for (const html of CC_ANSWERS(CC, ruleName, pc0, usd)) el("li", { html }, ul);
+
+  // rules table (means over domains)
+  const M = CC.mean;
+  const shown = CC_SHOWN.filter(p => M[p]);
+  const t = document.getElementById("cc-rules");
+  const hr = el("tr", {}, el("thead", {}, t));
+  for (const h of ["Rule", "Share to OpenAI", "Macro-F1 served", "Later on: share to OpenAI", "Later on: macro-F1 served"]) el("th", { text: h, class: h === "Rule" ? "" : "r" }, hr);
+  const tb = el("tbody", {}, t);
+  for (const p of shown) {
+    const tr = el("tr", {}, tb);
+    el("td", { text: ruleName(p), class: p === RULE ? "best" : "" }, tr);
+    for (const v of [pc0(M[p].openai_share), f3(M[p].served_f1), pc0(M[p].late_openai_share), f3(M[p].late_served_f1)]) el("td", { text: v, class: "r num" }, tr);
+  }
+
+  // every rule, per domain (later on)
+  const t2 = document.getElementById("cc-domains");
+  const h2 = el("tr", {}, el("thead", {}, t2));
+  el("th", { text: "Rule (later on: macro-F1 · share to OpenAI)" }, h2);
+  for (const d of doms) el("th", { text: d, class: "r" }, h2);
+  const tb2 = el("tbody", {}, t2);
+  const oaRow = el("tr", {}, tb2);
+  el("td", { text: "OpenAI alone, refusals counted wrong" }, oaRow);
+  for (const d of doms) el("td", { text: f3(CC.domains[d].openai_alone), class: "r num" }, oaRow);
+  for (const p of Object.keys(M)) {
+    const tr = el("tr", {}, tb2);
+    el("td", { text: ruleName(p) }, tr);
+    for (const d of doms) {
+      const q = CC.domains[d].policies[p];
+      el("td", { text: `${f3(q.late_served_f1)} · ${pc0(q.late_openai_share)}`, class: "r num small" }, tr);
+    }
+  }
+
+  // per-domain curves for the chosen rule
+  const xl = n => n <= 25 ? n / 25 : 1 + Math.log2(n / 25);
+  const host = document.getElementById("cc-curves");
+  for (const d of [...doms].sort((a, b) => CC.domains[a].policies[RULE].late_openai_share - CC.domains[b].policies[RULE].late_openai_share)) {
+    const v = CC.domains[d], q = v.policies[RULE], bg = v.policies.openai.windows;
+    const panel = el("div", { class: "panel" }, host);
+    el("h3", { text: d }, panel);
+    el("p", { class: "note num", text: `later on: accuracy ${pc0(q.late_served_acc)}, ${pc0(q.late_openai_share)} to OpenAI · OpenAI alone ${pc0(v.openai_alone_acc)}` }, panel);
+    const mid = w => (w.from + w.to) / 2;
+    const xMax = xl(v.n_texts);
+    lineChart(panel, {
+      xOf: xl, xMax, xLabel: "texts seen",
+      xTicks: [25, 100, 400, 1600].filter(n => xl(n) < xMax).map(n => ({ v: n, label: n.toLocaleString("en-US") })),
+      ref: v.openai_alone_acc,
+      bars: q.windows.map(w => ({ x0: w.from, x1: w.to, y: w.openai_share })),
+      series: [
+        { points: bg.map(w => ({ x: mid(w), y: w.vw_acc })), color: "var(--vw)", dash: "5 3", width: 1.6 },
+        { points: q.windows.map(w => ({ x: mid(w), y: w.served_acc })), color: "var(--vw)", width: 2.4, endDot: true },
+      ],
+    });
+  }
+
+  // cost of ownership
+  const A = CM.assumptions;
+  const perM = CM.tokens_per_text * A.price_per_m;
+  document.getElementById("cc-tco-intro").innerHTML =
+    `<p>OpenAI costs about <span class="num">$${perM.toFixed(0)}</span> per million texts at these text lengths (<span class="num">${Math.round(CM.tokens_per_text)}</span> billed tokens per text). ` +
+    `Under the "${ruleName(CM.policy)}" rule, <span class="num">${pc0(CM.late_openai_share)}</span> of texts still go to OpenAI later on, and served macro-F1 is <span class="num">${f3(CM.late_served_f1)}</span> against <span class="num">${f3(CM.openai_late_served_f1)}</span> for always-OpenAI. ` +
+    `With the assumptions below, offloading pays for its upkeep once monthly spend on decision calls passes about <strong class="num">${usd(Math.round(CM.break_even_spend / 500) * 500)}</strong>.</p>`;
+  const t3 = document.getElementById("cc-tco");
+  const h3 = el("tr", {}, el("thead", {}, t3));
+  for (const h of ["Monthly decision spend", "Texts per second", "OpenAI bill after", "VW servers", "Net saving per month", "Pays back the build in"]) el("th", { text: h, class: h.startsWith("Monthly") ? "" : "r" }, h3);
+  const tb3 = el("tbody", {}, t3);
+  for (const s of CM.scenarios) {
+    const tr = el("tr", {}, tb3);
+    el("td", { html: `${usd(s.spend)}<br><span class="small muted">${s.scenario}</span>` }, tr);
+    const cells = [Math.round(s.texts_per_second).toLocaleString("en-US"), usd(s.openai_after), `${s.vcpus} vCPU · ${usd(s.serving)}`,
+      (s.net_monthly < 0 ? "−" : "") + usd(Math.abs(s.net_monthly)), s.payback_months ? (s.payback_months < 1 ? "under a month" : `${s.payback_months.toFixed(1)} months`) : "never"];
+    for (const c of cells) el("td", { text: c, class: "r num" }, tr);
+  }
+  document.getElementById("cc-tco-notes").innerHTML =
+    `Assumptions, all illustrative: building and rolling out the cascade costs ${usd(A.eng_one_off)} once (about 4 engineer-weeks); keeping it running costs ${usd(A.eng_monthly)} a month (about a tenth of an engineer); ` +
+    `one always-on cloud vCPU costs ${usd(A.vcpu_month)} a month, provisioned at ${A.vcpu_headroom}× the measured need of ${A.vw_ms_per_question} ms per question. ` +
+    `Spend scenarios: the Ramp AI Index median and average monthly business AI spend (April 2026), and a round $100K. Those are totals across all AI use, mostly text generation; only the part spent on decision-style calls counts here. ` +
+    `Break-even spend = monthly upkeep ÷ share moved to VW. Quality is not priced in: offloading costs quality in most domains (see the table above).`;
+})();
+
+// facts
+(function facts() {
+  const host = document.getElementById("facts");
+  const F = D.facts;
+  const items = [
+    [`$${F.oa_cost.toFixed(2)}`, `OpenAI cost for all ${F.oa_requests.toLocaleString("en-US")} requests (${(F.oa_tokens / 1e6).toFixed(2)}M input tokens)`],
+    [`$${(F.oa_cost / F.oa_requests * 1000).toFixed(3)}`, "OpenAI cost per 1,000 texts (all questions about a text in one request)"],
+    [`${F.oa_ms_median} ms`, `OpenAI server time per request, median (p90 ${F.oa_ms_p90} ms, p99 ${F.oa_ms_p99} ms)`],
+    [`${F.vw_ms.toFixed(2)} ms`, "VW scoring time per question, CPU, no per-call cost"],
+    [`${F.tok_ratio.toFixed(2)}×`, "OpenAI billed tokens vs our tokenizer estimate (≈ 76 extra tokens per request)"],
+    [`$${F.bev_all_cost.toFixed(0)}`, "Estimated OpenAI cost to score all 276,000 BEV texts"],
+  ];
+  for (const [v, k] of items) {
+    const f = el("div", { class: "fact" }, host);
+    el("span", { class: "v", text: v }, f);
+    el("span", { class: "k", text: k }, f);
+  }
+})();
+</script>

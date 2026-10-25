@@ -3,3 +3,12 @@ __pycache__/
 data/
 .claude/
 .pi/
+.env
+.venv-*/
+*.vw.cache
+# decisions/: run outputs stay local, except the small report summaries
+decisions/runs/*
+!decisions/runs/final_report.json
+!decisions/runs/cascade/
+decisions/runs/cascade/*
+!decisions/runs/cascade/report.json

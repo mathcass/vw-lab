@@ -46,7 +46,7 @@ wheels = [
 ]
 
 [[package]]
-name = "vw-universal-dependencies"
+name = "vw-lab"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

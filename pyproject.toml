@@ -1,7 +1,7 @@
 [project]
-name = "vw-universal-dependencies"
+name = "vw-lab"
 version = "0.1.0"
-description = "Shared data preparation for nlp/ and word2vec/"
+description = "Shared data preparation for nlp/ and word2vec/ in vw-lab"
 requires-python = ">=3.12"
 dependencies = [
     "pyarrow==22.0.0",
