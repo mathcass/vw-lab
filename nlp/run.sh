@@ -63,7 +63,7 @@ if [ "$TASK" = dep ]; then
      -f "$MODEL"
 fi
 
-# Settings chosen by the hill-climbs in ../.claude/hillclimb/ (see the README):
+# Settings chosen by the hill-climbs in hillclimb/ (see the README):
 #   --search_rollin ref --search_rollout none
 #                          teacher forcing: learn each step from the true
 #                          previous tags, no rollouts. More accurate than VW's

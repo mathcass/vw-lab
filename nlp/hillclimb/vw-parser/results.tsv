@@ -1,0 +1,11 @@
+name	feats	passes	vw_args	dev_uas	dev_las	dev_uas_np	dev_las_np	train_s	predict_s	model_mb	train	pos	finished
+p1b-ref	w,p	3	--search_rollin ref --search_rollout none -b 24	77.47	74.74	83.93	80.79	363	2.0	94.19	train.conllu	spacy	19:31
+p1c-ctg	w,p	3	--search_rollin learn --search_rollout none --cost_to_go -b 24	72.69	68.52	78.63	73.86	1171	3.3	48.76	train.conllu	spacy	19:50
+p1d-ctg1	w,p	3	--search_rollin learn --search_rollout none --cost_to_go --one_learner -b 24	74.99	72.11	80.40	77.12	3343	7.4	186.65	train.conllu	spacy	20:46
+p1e-eager	w,p	3	--search_rollin learn --search_rollout none --cost_to_go --transition_system 2 -b 24	65.43	62.91	71.30	68.42	1315	3.4	49.28	train.conllu	spacy	21:08
+p1a-default	w,p	1	-b 24	72.77	69.08	79.34	75.11	469	1.8	97.52	train.conllu	spacy	21:16
+p2a-wp	w,p	3	--search_rollin ref --search_rollout none -b 26 --predict_only_model	79.87	77.15	86.50	83.38	357	2.3	154.77	train.conllu	spacy	21:22
+p2b-wlp	w,l,p	3	--search_rollin ref --search_rollout none -b 26 --predict_only_model	78.71	76.10	85.19	82.20	700	3.4	190.27	train.conllu	spacy	21:34
+p2c-wps3	w,p,s3	3	--search_rollin ref --search_rollout none -b 26 --predict_only_model	79.21	76.42	85.73	82.52	695	3.5	189.53	train.conllu	spacy	21:46
+p2d-lps3h	l,p,s3,h	3	--search_rollin ref --search_rollout none -b 26 --predict_only_model	79.63	77.05	86.10	83.14	1358	4.9	191.50	train.conllu	spacy	22:09
+p2e-wlps3h	w,l,p,s3,h	3	--search_rollin ref --search_rollout none -b 26 --predict_only_model	78.83	76.19	85.18	82.15	2255	8.2	194.37	train.conllu	spacy	22:46

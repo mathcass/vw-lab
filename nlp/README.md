@@ -16,7 +16,7 @@ Paths like `data/work/` below are in the repo's shared `data/` folder
 (`../data` from here).
 
 ```
-make download   # fetch UD v2.7 into data/ (then untar ud-treebanks-v2.7.tgz there)
+make download   # fetch UD v2.7 into data/ (checksummed; the other targets do this when needed)
 make prepare    # convert UD_English-EWT to VW format in data/work/
 make train      # train data/work/model.vw (~8.4 MB; SIZE=small for ~0.4 MB)
 make eval       # score dev and test, with a most-frequent-tag baseline
@@ -41,6 +41,7 @@ make spacy-pos-prepare spacy-pos-train spacy-pos-eval  # tagger on spaCy's tags 
 make sent-prepare sent-train sent-eval                 # sentence splitter (~0.6 MB, ~30 s; prepare ~2 min)
 make dep-prepare dep-train dep-eval                    # dependency parser (~4.9 MB, ~12 min)
 make pipeline-eval  # raw EWT dev/test paragraphs through all four models, scored against spaCy
+make c4-eval        # the same on 1M words of held-out C4, timed against spaCy (~8 min)
 uv run --group spacy python pipeline.py IN.txt OUT.conllu  # any text, one paragraph per line
 ```
 
@@ -189,10 +190,9 @@ tokens. It came out of two hill-climbs, described below and in "Small model".
 Train times before the small-model climb are rough: other jobs were often
 running on the same 4-core machine.
 
-The first hill-climb (records in `.claude/hillclimb/vw-tagger/` at the repo
-root, not committed: `narrative.md`
-for the story, `results.tsv` for every run) found the features; the second
-(`.claude/hillclimb/vw-tagger-small/`) found the training settings and made
+The first hill-climb (records in [`hillclimb/vw-tagger/`](hillclimb/README.md):
+`narrative.md` for the story, `results.tsv` for every run) found the
+features; the second (`hillclimb/vw-tagger-small/`) found the training settings and made
 the model small. The first climb's config, now replaced, used:
 
 - Features from `conllu-to-vw.py`, one namespace each: the word (`w`),
@@ -223,7 +223,7 @@ Notes:
 ### Small model
 
 A second hill-climb looked for the smallest model that stays at or above 90%
-dev (records in `.claude/hillclimb/vw-tagger-small/`). spaCy's small English
+dev (records in `hillclimb/vw-tagger-small/`). spaCy's small English
 pipeline, about 12 MB, was the size to beat. Train times are for one job at a
 time on the same 4-core machine.
 
@@ -449,15 +449,21 @@ on every paragraph.
 | C4, 1M held-out words | 23,371 | 1,162,354 | 96.57 | 93.90% | 68.28 | 80.54 | 76.72 |
 
 (95% intervals are about ±1-3 points on EWT and ±0.2-0.4 on C4; `make
-pipeline-eval` prints them.) The C4 text is the documents after the NER
-training sample in the same shard.
+pipeline-eval` and `make c4-eval` print them.) The C4 text is the documents
+after the NER training sample in the same shard (`make c4-eval` builds it,
+runs both, and prints the times and peak memory below).
 
-Speed and size on the C4 text, one process each on a 4-core CPU:
+Speed and size on the C4 text, one process each on a 4-core CPU (2026-10-18,
+with other jobs running on the machine):
 
 | | Models | Wall time | Tokens/s | Peak memory |
 |---|---|---|---|---|
 | spaCy `en_core_web_sm` (`spacy-label.py`) | ~12 MB | 161 s | 7,200 | 0.51 GB |
 | VW pipeline (`pipeline.py`) | 23.2 MB (0.6 + 8.3 + 9.3 + 4.9) | 265 s | 4,400 | 0.51 GB |
+
+A rerun with `make c4-eval` on a quiet machine (2026-10-24) took 118 s for
+spaCy and 198 s for VW (9,800 and 5,900 tokens/s), the same ratio, with
+identical output and scores.
 
 spaCy's time includes its lemmatizer and morphology, which the VW pipeline
 doesn't produce. The VW models themselves (`vw -t`) take ~120 s of the 265

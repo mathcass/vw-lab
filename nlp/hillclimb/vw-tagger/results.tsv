@@ -1,0 +1,17 @@
+name	feats	passes	vw_args	dev_acc	dev_unseen	dev_sent	train_s	predict_s	model_mb	finished
+r0-committed-10p	w (no namespace)	10	(as run.sh, -b 18)	73.29	19.47	11.89	411		3	earlier
+r1-b24	w (no namespace)	5	-b 24	86.48	32.54	30.57	251		49	earlier
+r2-ctx-affix	w	5	-b 24 --search_neighbor_features -1:w,1:w,-2:w,2:w --affix -3w,-2w,+2w --spelling w	90.11	66.89	42.06	339	0.8	134	earlier
+r2-seed7	w	5	-b 24 --search_neighbor_features -1:w,1:w,-2:w,2:w --affix -3w,-2w,+2w --spelling w --random_seed 7	90.11	66.89	42.06	264	0.7	134	17:33
+r3a-lexical	w,l,s4,p3,h,f	5	-b 24 --search_neighbor_features -1:w,1:w,-2:w,2:w	90.93	71.20	44.86	476	1.8	161	17:42
+r3b-lexical+nbr-sh	w,l,s4,p3,h,f	5	-b 24 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h	91.32	72.30	47.20	625	1.5	174	17:44
+r4a-word-x-nbr	w,l,s4,p3,h,f	5	-b 24 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83	91.86	71.20	48.25	697	1.2	210	17:57
+r4b-history2	w,l,s4,p3,h,f	5	-b 24 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h --search_history_length 2 --search_max_bias_ngram_length 3	90.93	71.44	47.30	895	1.1	203	18:01
+r5a-b26	w,l,s4,p3,h,f	5	-b 26 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83	92.84	75.12	51.70	594	3.1	772	18:11
+r5b-suffix-x-nbr	w,l,s4,p3,h,f	5	-b 24 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83 -q s\x83	91.12	70.43	47.50	1056	1.7	210	18:19
+r6b-b25	w,l,s4,p3,h,f	5	-b 25 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83	92.46	73.54	51.20	614	2.1	417	18:29
+r6a-b26-suffix-x-nbr	w,l,s4,p3,h,f	5	-b 26 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83 -q s\x83	92.09	73.49	49.40	1032	3.2	838	18:36
+r7b-b26-history2	w,l,s4,p3,h,f	5	-b 26 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83 --search_history_length 2 --search_max_bias_ngram_length 3	92.70	74.59	52.75	1224	3.1	827	19:22
+r7a-10passes	w,l,s4,p3,h,f	10	-b 26 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83	92.55	73.73	50.40	1405	2.6	772	19:45
+r8a-3passes	w,l,s4,p3,h,f	3	-b 26 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83	92.95	75.69	53.10	262	2.6	772	19:50
+r8b-drop-l-p	w,s4,h,f	5	-b 26 --search_neighbor_features -1:w,1:w,-2:w,2:w,-1:s,1:s,-1:h,1:h -q w\x83	92.50	73.49	50.30	521	6.8	766	19:59

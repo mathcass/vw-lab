@@ -2,9 +2,9 @@
 name = "vw-nlp"
 version = "0.1.0"
 description = "VW POS tagger on UD English-EWT, and VW copies of spaCy's tagger, sentence splitter, NER and parser"
-requires-python = ">=3.12"
+requires-python = ">=3.14,<3.15"
 dependencies = [
-    "vowpalwabbit>=9.11.9",
+    "vowpalwabbit==9.11.9",
 ]
 
 [dependency-groups]
