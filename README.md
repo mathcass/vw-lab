@@ -35,6 +35,11 @@ make pipeline-eval  # raw EWT dev/test paragraphs through all four models, score
 uv run --group spacy python pipeline.py IN.txt OUT.conllu  # any text, one paragraph per line
 ```
 
+Word embeddings trained with VW, compared against gensim word2vec and
+PPMI+SVD, are in [`word2vec/`](word2vec/README.md). That folder has its own
+Makefile and its own uv project (Python 3.12-3.13, for gensim), and shares `data/`
+with the rest of the repo.
+
 ## Data
 
 Nothing under `data/` is committed; `make download` fetches the UD release and

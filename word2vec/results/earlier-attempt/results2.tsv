@@ -1,0 +1,35 @@
+# Round 2: after fixing the `--ignore_linear` bug. Fixed benchmark: wiki500k (500k words),
+# vocab 3000, window 5. Metrics: kNN UPOS purity (top 500, k=10), SimLex-999 Spearman (n~203),
+# WordSim-353 Spearman (n~109). All runs nice'd, one at a time, own .pi venv.
+name	method	objective	data	train_s	loss	purity	simlex	wordsim	notes
+bench_ppmi	PPMI+SVD	PPMI+truncated SVD	wiki500k	23	-	0.295	+0.202	+0.468	CONTROL: count-based, no VW
+bench_sg	lrq	skip-gram, 1 ep, --ignore_linear c	wiki500k 5.4M	478	-	0.205	-0.010	-0.014	the ORIGINAL (buggy) setup
+sg_ni1	lrq	skip-gram, 1 ep, no ignore	wiki500k 5.4M	483	0.442	0.213	+0.019	+0.216	bug fixed; WordSim jumps, SimLex flat
+obj_ppmi	lrq	PPMI regression (squared), 1 ep, --ignore_linear c	ppmi 311k	37	1.539	0.184	+0.011	+0.120	
+obj_ppmi_full	lrq	PPMI regression (squared), 1 ep, no ignore	ppmi 311k	36	1.539	0.175	+0.026	+0.171	
+e20_ppmi	lrq	PPMI regression (squared), 20 ep, no ignore	ppmi 6.2M	540	0.239	0.176	-0.049	+0.193	fits the matrix, embeddings still poor
+e20_logcount	lrq	log-count (squared), 20 ep, no ignore	logcount 6.2M	598	0.250	0.249	-0.049	-0.007	
+e20_poisson	lrq	Poisson (count label), 20 ep, no ignore	count 6.2M	717	diverged	0.184	+0.016	+0.006	diverged
+x_ftrl	lrq	PPMI regression + --ftrl, 10 ep	ppmi 3.1M	381	0.154	0.241	+0.066	+0.105	best fit
+x_invariant	lrq	PPMI regression + --invariant, 10 ep	ppmi 3.1M	261	0.189	0.263	+0.112	-0.049	best SimLex/purity from VW
+lowrank_1ep_none	lrq	synthetic rank-5 matrix, 1 ep, no ignore	160k	-	3.531	-	-	-	recon corr 0.706
+lowrank_1ep_ignc	lrq	synthetic rank-5 matrix, 1 ep, --ignore_linear c	160k	-	5.197	-	-	-	recon corr 0.074 (BUG)
+lowrank_1ep_ignw	lrq	synthetic rank-5 matrix, 1 ep, --ignore_linear w	160k	-	5.103	-	-	-	recon corr 0.085 (BUG)
+lowrank_20ep_none	lrq	synthetic rank-5 matrix, 20 ep, no ignore	3.2M	45	0.390	-	-	-	recon corr 0.987: needs many epochs
+lowrank_20ep_ignc	lrq	synthetic rank-5 matrix, 20 ep, --ignore_linear c	3.2M	-	5.024	-	-	-	recon corr 0.107 (BUG persists)
+lowrank_20ep_ignw	lrq	synthetic rank-5 matrix, 20 ep, --ignore_linear w	3.2M	-	4.988	-	-	-	recon corr 0.098 (BUG persists)
+opt_gd	lrq	PPMI + default gd, 1 ep	ppmi 311k	27	1.539	0.158	+0.026	+0.171	
+opt_adaptive	lrq	PPMI + --adaptive, 1 ep	ppmi 311k	27	9.399	-	-	-	diverged
+opt_normalized	lrq	PPMI + --normalized, 1 ep	ppmi 311k	28	1.730	0.158	-0.001	-0.040	
+opt_invariant	lrq	PPMI + --invariant, 1 ep	ppmi 311k	27	0.738	0.158	+0.103	-0.057	
+opt_OjaNewton	lrq	PPMI + --OjaNewton, 1 ep	ppmi 311k	24	1.711	-	-	-	extraction produced no factors
+opt_ftrl	lrq	PPMI + --ftrl, 1 ep	ppmi 311k	40	0.527	-	-	-	best fit at 1 ep
+opt_coin	lrq	PPMI + --coin, 1 ep	ppmi 311k	41	2.546	-	-	-	915913 NAN warnings
+opt_pistol	lrq	PPMI + --pistol, 1 ep	ppmi 311k	27	6.447	0.158	+0.006	-0.035	diverged
+opt_bfgs	lrq	PPMI + --bfgs, 1 ep	ppmi 311k	1	-	-	-	-	exited immediately, no training
+opt_svrg	lrq	PPMI + --svrg, 1 ep	ppmi 311k	15	38.297	-	-	-	diverged
+q_seed1	lrq	PPMI + --random_seed 1, 1 ep	ppmi 311k	27	1.539	-	-	-	identical to default (lrq is deterministic)
+q_seed2	lrq	PPMI + --random_seed 2, 1 ep	ppmi 311k	27	1.539	-	-	-	identical to default
+q_randw	lrq	PPMI + --random_weights, 1 ep	ppmi 311k	31	1.430	-	-	-	no improvement
+q_lrqfa	lrq	PPMI + --lrqfa wc50, 1 ep	ppmi 311k	300	-	-	-	-	timed out / hung
+gdmf_ppmi	gd_mf (--rank)	PPMI regression (squared), rank 50, movielens regime, 20 passes	ppmi 6.2M	785	0.119	0.238	+0.057	-0.001	fits better than lrq (0.119 vs 0.239) but embeddings still poor; extracted via --audit

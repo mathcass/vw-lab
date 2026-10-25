@@ -1,0 +1,17 @@
+[project]
+name = "vw-word2vec"
+version = "0.1.0"
+description = "Word embeddings with Vowpal Wabbit, compared against gensim word2vec and PPMI+SVD"
+# gensim has no Python 3.14 wheel, so this folder has its own project (the
+# repo root uses 3.14). Versions are pinned to the ones the results came from.
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "vowpalwabbit==9.11.9",
+    "numpy==2.5.4",
+    "scipy==1.18.1",
+    "gensim==4.4.0",
+    "pyarrow==22.0.0",
+]
+
+[tool.uv]
+package = false

@@ -1,0 +1,21 @@
+name	method	data	tokens	vocab	rank	config	metric	value	random	notes
+emb1a	lrq	synthetic 2 topics x 4 words	240k	8	2	--lrq wc2 --noconstant --ignore_linear c	within-topic cosine	1.000	-	cross-topic cosine -1.000
+emb1b	lrq	synthetic 20 topics x 10 words	400k	200	10	--lrq wc10 --noconstant --ignore_linear c	kNN topic purity	0.882	0.050	
+emb1c	lrq	synthetic 20 topics x 10 words	400k	200	50	--lrq wc50 --noconstant --ignore_linear c	kNN topic purity	0.900	0.050	
+emb1d	lrq	synthetic 50 topics x 20 words	1.2M	1000	20	--lrq wc20 --noconstant --ignore_linear c	kNN topic purity	0.985	0.020	
+emb2a	lrq	EWT word->UPOS pairs	488k	-	10	--lrq wc10 --noconstant --ignore_linear c	kNN UPOS purity	0.659	0.164	context is the gold POS tag
+emb3a	lrq	UD EWT+GUM+LinES+ParTUT+PUD	424k	7654	50	--lrq wc50 --noconstant --ignore_linear c	kNN UPOS purity	0.219	0.158	loss 0.461; function words cluster, content words do not
+emb4a	lrq	WikiText-103 sample	1.0M	15000	50	--lrq wc50 --noconstant --ignore_linear c	kNN UPOS purity	0.223	0.192	content neighbours still garbage
+emb5a	lrq	WikiText-103 sample	200k	8000	50	--lrq wc50 --noconstant --ignore_linear c	kNN UPOS purity	0.198	0.170	loss 0.478
+emb5b	lrq	WikiText-103 sample	200k	8000	10	--lrq wc10 --noconstant --ignore_linear c	kNN UPOS purity	0.205	0.164	loss 0.457
+emb5c	lrq	WikiText-103 sample	200k	8000	20	--lrq wc20 --noconstant --ignore_linear c	kNN UPOS purity	0.194	0.168	loss 0.461
+emb5d	lrq	WikiText-103 sample	200k	1500	50	--lrq wc50 --noconstant --ignore_linear c	kNN UPOS purity	0.178	0.148	loss 0.459
+emb5e	lrq	WikiText-103 sample	200k	8000	50	... + --neg-exclude	kNN UPOS purity	0.195	0.170	excluding in-sentence negatives: no change
+emb6a	lrq	WikiText-103 sample	100k	1500	50	... + --lrqdropout	kNN UPOS purity	0.158	0.152	loss 0.624, worse
+emb6b	lrq	WikiText-103 sample	100k	1500	50	... --ignore_linear w	kNN UPOS purity	0.167	0.153	loss 0.428
+emb6c	lrq	WikiText-103 sample	100k	1500	50	... --lrqdropout --ignore_linear w	kNN UPOS purity	0.168	0.152	loss 0.447
+emb7a	lrq	WikiText-103 sample	500k	3000	50	--lrq wc50 --noconstant --ignore_linear c	kNN UPOS purity	0.209	0.161	loss 0.575
+emb7b	lrq	WikiText-103 sample	500k	3000	50	... --power_t 0 -l 0.05	kNN UPOS purity	0.196	0.161	loss 0.652
+emb7c	lrq	WikiText-103 sample	500k	3000	50	... --power_t 0 -l 0.5	kNN UPOS purity	0.203	0.161	loss 0.597
+emb7d	lrq (shared)	WikiText-103 sample	100k	1500	50	--lrq ww50 (both sides in namespace w)	kNN UPOS purity	0.180	0.149	loss 0.397
+emb8a	PPMI+SVD	WikiText-103 sample	500k	3000	50	window 5, PPMI, truncated SVD (CONTROL)	kNN UPOS purity	0.295	0.156	sensible neighbours: london->centre,station,town,york,hotel

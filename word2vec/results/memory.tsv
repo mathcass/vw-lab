@@ -1,0 +1,19 @@
+case	corpus	vocab	wall_s	gen_peak_mb	trainer_peak_mb	total_peak_mb	status	command	date
+10m_gensim_sg	10M	20k	36	-	137	137	ok	baselines.py w2v_stream --dim 100 --epochs 1	2026-10-18 12:56
+10m_gensim_cbow	10M	20k	14	-	137	137	ok	baselines.py w2v_stream --dim 100 --epochs 1 --sg 0	2026-10-18 12:57
+10m_ppmi	10M	20k	38	-	889	889	ok	baselines.py ppmi --dim 100	2026-10-18 12:58
+10m_vw_lrq	10M	20k	120	-	124	124	probe 120s	gen.py cbow --epochs 1 | vw --lrq wc100 -b 25 --loss_function logistic --noconstant --pistol	2026-10-18 13:00
+100m_gensim_sg	100M	189k	439	-	421	421	ok	baselines.py w2v_stream --dim 100 --epochs 1	2026-10-18 13:07
+100m_gensim_cbow	100M	189k	154	-	421	421	ok	baselines.py w2v_stream --dim 100 --epochs 1 --sg 0	2026-10-18 13:10
+100m_ppmi	100M	189k	25	-	3090	3090	failed (exit 137, see work-scale/100m_ppmi.log)	baselines.py ppmi --dim 100	2026-10-18 13:12
+probe_10m_gdmf_b18	-	20000	0	-	292	292	touch probe (VmPeak:329556 VmHWM:299652)	vw -q wc --rank 100 -b 18 --loss_function logistic --noconstant (ids, ctx ns c)	2026-10-18 13:12
+probe_100m_lrq_b26	-	189267	6	-	777	777	touch probe (VmPeak:1117220 VmHWM:795808)	vw --lrq wc100 -b 26 --loss_function logistic --noconstant --pistol (ids, ctx ns cb)	2026-10-18 13:12
+probe_100m_gdmf_b19	-	189267	4	-	548	548	touch probe (VmPeak:591700 VmHWM:561764)	vw -q wc --rank 100 -b 19 --loss_function logistic --noconstant (ids, ctx ns cb)	2026-10-18 13:12
+probe_100m_gdmf_b18	-	189267	4	-	292	292	touch probe (VmPeak:329556 VmHWM:299612)	vw -q wc --rank 100 -b 18 --loss_function logistic --noconstant (ids, ctx ns c)	2026-10-18 13:12
+probe_100m_gdmf_hash17	-	189267	4	-	164	164	touch probe (VmPeak:198484 VmHWM:168584)	vw -q wc --rank 100 -b 17 --loss_function logistic --noconstant (words, ctx ns c)	2026-10-18 13:13
+probe_100m_gdmf_k50_b18	-	189267	3	-	164	164	touch probe (VmPeak:198484 VmHWM:168532)	vw -q wc --rank 50 -b 18 --loss_function logistic --noconstant (ids, ctx ns c)	2026-10-18 13:13
+10m_vw_gdmf	10M	20k	312	39	293	332	ok	gen.py cbow --epochs 1 | vw -q wc --rank 100 -b 18 --loss_function logistic --noconstant --power_t 0 -l 0.02	2026-10-18 13:18
+100m_vw_gdmf_b18	100M	189k	3591	55	292	347	ok	gen.py cbow --epochs 1 | vw -q wc --rank 100 -b 18 --loss_function logistic --noconstant --power_t 0 -l 0.02	2026-10-18 14:18
+100m_vw_gdmf_hash17	100M	189k	3526	63	165	228	ok	gen.py cbow --epochs 1 --words /home/cass/src/vw-universal-dependencies/.pi/embeddings-redo/work-big/vocab.tsv | vw -q wc --rank 100 -b 17 --loss_function logistic --noconstant --power_t 0 -l 0.02	2026-10-18 15:17
+100m_vw_gdmf_online17	100M	730k (all)	3667	126	165	291	ok	gen.py online | vw -q wc --rank 100 -b 17 --loss_function logistic --noconstant --power_t 0 -l 0.02	2026-10-18 17:04
+repro_dev_gdmf_cbow_e5_l0.05	10M	20000	208	38	165	203	ok	gen.py cbow --epochs 5 --max-paras 22000 | vw -q wc --rank 50 -b 18 --loss_function logistic --noconstant -l 0.05 --power_t 0	2026-10-24 22:34
