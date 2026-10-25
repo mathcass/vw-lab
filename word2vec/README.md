@@ -79,7 +79,10 @@ rerun of `dev_gdmf_cbow_e5_l0.05` reproduces its loss and scores exactly
   Words a method didn't produce count as zero vectors, so coverage is
   identical across methods. 95% bootstrap intervals are about ±0.065 for
   SimLex and ±0.085 for WordSim, so smaller differences are noise. Seed
-  reruns vary by ±0.01-0.02.
+  reruns vary by ±0.01-0.02. gensim also varies between runs with the same
+  seed, because it trains on 2 threads: a fresh-clone rerun (2026-10-25)
+  moved its dim-100 analogy score from 31.9% to 33.5%. VW and PPMI+SVD
+  reproduce their scores exactly.
 - **Results** are appended to `results/results.tsv`: name, train time, dim,
   missing words, each score with its interval, the loss and flags, and the
   date. Peak memory goes to `results/memory.tsv`.

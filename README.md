@@ -92,19 +92,28 @@ revision (see its REPRODUCE.md).
 
 Needs `make`, `curl`, `uv` and GNU `time`; uv installs a Python in each
 project's pinned range and the locked packages. Every step downloads what it
-needs. Run one job at a time on a 16 GB machine:
+needs. Run one job at a time on a 16 GB machine. Times are wall time from a
+fresh clone on a 4-core CPU (2026-10-24/25), downloads included:
 
 ```
 cd nlp
-make prepare train eval                   # gold POS tagger
-make spacy-pos-prepare spacy-pos-train    # tagger on spaCy's tags
-make sent-prepare sent-train              # sentence splitter
-make ner-prepare ner-train ner-eval       # C4 download, spaCy labeling, ~14 min training
-make dep-prepare dep-train dep-eval       # parser, ~12 min training
-make pipeline-eval c4-eval                # whole pipeline vs spaCy
-cd ../word2vec && make setup benchmarks corpus fast baselines
-cd ../decisions                           # then follow REPRODUCE.md (the OpenAI steps cost ~$1.25)
+make prepare train eval                         # gold POS tagger: 2 min (UD download, train 34 s)
+make spacy-pos-prepare spacy-pos-train spacy-pos-eval   # 1.5 min
+make sent-prepare sent-train sent-eval          # 2 min
+make ner-prepare                                # 13 min (C4 download, spaCy labels 5.1M tokens)
+make ner-train ner-eval                         # 12.5 min
+make dep-prepare dep-train dep-eval             # 8.5 min
+make pipeline-eval c4-eval                      # 7.5 min
+cd ../word2vec
+make setup benchmarks corpus                    # 30 s (WikiText download)
+make fast                                       # 21 min
+make baselines                                  # 6 min
+cd ../decisions                                 # REPRODUCE.md; data and fold-0 model: 4 min
 ```
 
-On this machine these rebuild the `nlp/` models byte for byte. Another CPU
-may differ in the last decimal places of VW's floating-point math.
+That fresh clone rebuilt every `nlp/` model and data file byte for byte,
+word2vec's VW and PPMI+SVD scores exactly (gensim, on 2 threads, varies a
+little between runs), and the decisions data, splits, fold-0 model and
+predictions byte for byte. The OpenAI steps in `decisions/` cost about
+$1.25 and need a key; they weren't rerun. Another CPU may differ in the last
+decimal places of VW's floating-point math.
