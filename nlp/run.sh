@@ -1,5 +1,6 @@
 #!/bin/bash
-# Train a model. TASK, PASSES, MODEL and SIZE can be overridden from the environment:
+# Train a model. TASK, PASSES, MODEL, SIZE and DATA can be overridden from the
+# environment. Work folders are in DATA, the repo's shared data/ by default.
 #   TASK=pos (default)  POS tagger on data/work (`make prepare`)
 #     SIZE=accurate (default)  ~8.4 MB model, 93.5% test
 #     SIZE=small               ~0.4 MB model, 90.9% test
@@ -18,13 +19,14 @@
 # The vowpalwabbit wheel has no standalone `vw` binary; this is its CLI.
 VW=(uv run python -m vowpalwabbit)
 
+DATA="${DATA:-$(cd "$(dirname "$0")/../data" && pwd)}"
 TASK="${TASK:-pos}"
 PASSES="${PASSES:-3}"
 SIZE="${SIZE:-accurate}"
 
 case "$TASK" in
   pos)
-    WORK=./data/work
+    WORK=$DATA/work
     case "$SIZE" in
       accurate) L1=3e-7 ;;
       small) L1=7e-7 ;;
@@ -32,10 +34,10 @@ case "$TASK" in
     esac ;;
   # 25x more training text than the tagger, so far more updates; L1 is
   # applied on each one, so it has to be much weaker for the same size.
-  ner) WORK=./data/ner-work; L1=6e-8 ;;
-  spacy-pos) WORK=./data/spacy-pos-work; L1=3e-7 ;;
-  sent) WORK=./data/sent-work; L1="${L1:-3e-6}" ;;
-  dep) WORK=./data/dep-work; L1=5e-8 ;;
+  ner) WORK=$DATA/ner-work; L1=6e-8 ;;
+  spacy-pos) WORK=$DATA/spacy-pos-work; L1=3e-7 ;;
+  sent) WORK=$DATA/sent-work; L1="${L1:-3e-6}" ;;
+  dep) WORK=$DATA/dep-work; L1=5e-8 ;;
   *) echo "TASK must be pos, ner, spacy-pos, sent or dep, not $TASK" >&2; exit 1 ;;
 esac
 
@@ -61,7 +63,7 @@ if [ "$TASK" = dep ]; then
      -f "$MODEL"
 fi
 
-# Settings chosen by the hill-climbs in .claude/hillclimb/ (see the README):
+# Settings chosen by the hill-climbs in ../.claude/hillclimb/ (see the README):
 #   --search_rollin ref --search_rollout none
 #                          teacher forcing: learn each step from the true
 #                          previous tags, no rollouts. More accurate than VW's

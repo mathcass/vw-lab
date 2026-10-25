@@ -1,27 +1,35 @@
-ud := data/ud-treebanks-v2.7
+# VW POS tagger (gold UD tags), and the spaCy copies: tagger, sentence
+# splitter, entity tagger, parser, and the pipeline that chains them. See
+# README.md. Run from this folder (`make -C nlp TARGET` from the root).
+# Data lives in the repo's shared data/; downloads are in the root Makefile.
+
+DATA := ../data
+ud := $(DATA)/ud-treebanks-v2.7
 data_prefix := $(ud)/UD_English-EWT/en_ewt-ud
-work := data/work
+work := $(DATA)/work
 VW := uv run python -m vowpalwabbit
 
 # NER: spaCy's entities on UD text + 4M words of C4 web text, distilled into VW.
-spacy := data/spacy
-c4 := data/c4
-wiki := data/wikitext
-ner_work := data/ner-work
-dep_work := data/dep-work
-spacy_pos_work := data/spacy-pos-work
-sent_work := data/sent-work
+spacy := $(DATA)/spacy
+c4 := $(DATA)/c4
+wiki := $(DATA)/wikitext
+ner_work := $(DATA)/ner-work
+dep_work := $(DATA)/dep-work
+spacy_pos_work := $(DATA)/spacy-pos-work
+sent_work := $(DATA)/sent-work
+pipeline_work := $(DATA)/pipeline
 SPACY := uv run --group spacy python
-c4_rev := 1588ec454efa1a09f29cd18ddd04fe05fc8653a2
-c4_sha256 := 8ef8d75b0e045dec4aa5123a671b4564466b0707086a7ed1ba8721626dfffbc9
-wiki_rev := b08601e04326c79dfdd32d625aee71d232d685c3
-wiki_sha256 := 74da360f23826045b3e6ac6375411fdb15f003030aa74f2596ed08b857cb9212
 # "All text": EWT train plus the other English treebanks with full text.
 spacy_train_src := $(data_prefix)-train.conllu \
 	$(foreach t,GUM LinES ParTUT PUD,$(sort $(wildcard $(ud)/UD_English-$(t)/*.conllu)))
 
+# UD v2.7 (then untar ud-treebanks-v2.7.tgz in data/).
 download:
-	cd data && curl --remote-name-all https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3424{/ud-treebanks-v2.7.tgz,/ud-documentation-v2.7.tgz,/ud-tools-v2.7.tgz}
+	$(MAKE) -C .. download
+
+# Shared downloads (pinned and checksummed), built by the root Makefile.
+$(c4)/c4-train-00000.json.gz $(wiki)/wiki-10m.txt:
+	$(MAKE) -C .. $(patsubst ../%,%,$@)
 
 # Dev and test reuse train's tag map so label ids line up with the model.
 # The VW cache is removed so training doesn't reuse stale data.
@@ -70,13 +78,6 @@ $(spacy)/train-ewt.conllu:
 	mkdir -p $(spacy)
 	$(SPACY) spacy-label.py $@ $(data_prefix)-train.conllu
 
-# The first C4 (en) training shard (319 MB), pinned to one dataset revision.
-$(c4)/c4-train-00000.json.gz:
-	mkdir -p $(c4)
-	curl -fL -o $@.part https://huggingface.co/datasets/allenai/c4/resolve/$(c4_rev)/en/c4-train.00000-of-01024.json.gz
-	echo "$(c4_sha256)  $@.part" | sha256sum -c -
-	mv $@.part $@
-
 $(c4)/c4-4m.txt: $(c4)/c4-train-00000.json.gz
 	uv run python c4-to-text.py $< $@ 4000000
 
@@ -85,17 +86,7 @@ $(c4)/c4-4m.conllu: $(c4)/c4-4m.txt
 	$(SPACY) spacy-label.py $@ $<
 
 # WikiText: the earlier NER recipe (e5a in the README); not used by ner-prepare.
-# The first WikiText-103 training shard (157 MB), pinned to one dataset revision.
-$(wiki)/train-00000.parquet:
-	mkdir -p $(wiki)
-	curl -fL -o $@.part https://huggingface.co/datasets/Salesforce/wikitext/resolve/$(wiki_rev)/wikitext-103-raw-v1/train-00000-of-00002.parquet
-	echo "$(wiki_sha256)  $@.part" | sha256sum -c -
-	mv $@.part $@
-
-$(wiki)/wiki-10m.txt: $(wiki)/train-00000.parquet
-	uv run --group wikitext python wikitext-to-text.py $< $@ 10000000 0
-
-# spaCy labels for the 10M-word sample (~17 min).
+# spaCy labels for the 10M-word sample (~17 min; the sample comes from the root Makefile).
 $(wiki)/wiki-10m.conllu: $(wiki)/wiki-10m.txt
 	$(SPACY) spacy-label.py $@ $<
 
@@ -186,7 +177,6 @@ dep-eval:
 # Raw EWT dev/test paragraphs through all four VW models (pipeline.py), scored
 # against spaCy's full pipeline on the same text. Needs the spacy-pos, ner,
 # sent and dep models.
-pipeline_work := data/pipeline
 pipeline-eval: $(spacy)/dev-par.conllu $(spacy)/test-par.conllu
 	mkdir -p $(pipeline_work)
 	for split in dev test; do \

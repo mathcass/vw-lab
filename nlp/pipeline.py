@@ -16,6 +16,8 @@ blank lines skipped, as in spacy-label.py). The steps:
                 a token the parser leaves unattached (VW leaves most
                 sentences' last token so) goes to the root, as in evaluate.py
 
+data/ is the repo's shared data folder (../data from here).
+
 Each VW step writes its input with the repo's converters (conllu-to-vw.py,
 conllu-to-dep.py) and runs `vw -t` on the whole file. OUTPUT is CoNLL-U in
 spacy-label.py's format (XPOS, HEAD, DEPREL, NER= and SpaceAfter=No in MISC,
@@ -34,11 +36,12 @@ import spacy
 from evaluate import attach_unattached
 
 REPO = Path(__file__).resolve().parent
+DATA = REPO.parent / "data"
 MODELS = {
-    "sent": REPO / "data/sent-work",
-    "pos": REPO / "data/spacy-pos-work",
-    "ner": REPO / "data/ner-work",
-    "dep": REPO / "data/dep-work",
+    "sent": DATA / "sent-work",
+    "pos": DATA / "spacy-pos-work",
+    "ner": DATA / "ner-work",
+    "dep": DATA / "dep-work",
 }
 
 

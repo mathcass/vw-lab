@@ -1,0 +1,11 @@
+[project]
+name = "vw-universal-dependencies"
+version = "0.1.0"
+description = "Shared data preparation for nlp/ and word2vec/"
+requires-python = ">=3.12"
+dependencies = [
+    "pyarrow==22.0.0",
+]
+
+[tool.uv]
+package = false

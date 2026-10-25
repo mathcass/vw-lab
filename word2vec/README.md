@@ -29,8 +29,8 @@ text, beat anything trained here. See
 
 Everything runs from this folder with `make` (or `make -C word2vec TARGET`
 from the repo root). This folder is its own [uv](https://docs.astral.sh/uv/)
-project on Python 3.12-3.13, because gensim has no wheel for the root
-project's Python 3.14. Package versions are pinned to the ones the results
+project on Python 3.12-3.13, because gensim has no wheel for Python 3.14,
+which `nlp/` uses. Package versions are pinned to the ones the results
 came from (VW 9.11.9, numpy 2.5.4, scipy 1.18.1, gensim 4.4.0). The original
 runs used Python 3.14 for VW and 3.12 for gensim; a VW rerun here on 3.13
 gives identical results.

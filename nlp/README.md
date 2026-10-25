@@ -1,13 +1,22 @@
-using vowpal wabbit to train a part of speech tagger.
+# nlp: VW taggers, entities and parses
+
+Vowpal Wabbit models for English text: a part-of-speech tagger trained on UD
+English-EWT, and VW copies of spaCy's tagger, sentence splitter, entity
+tagger and dependency parser, chained into a pipeline that runs on raw text.
 
 ## Usage
 
-Dependencies are managed with [uv](https://docs.astral.sh/uv/). The
-`vowpalwabbit` wheel doesn't ship a standalone `vw` binary, so the scripts call
-its CLI as `uv run python -m vowpalwabbit` (same flags, but it can't read stdin).
+Run everything from this folder (or `make -C nlp TARGET` from the repo root).
+Dependencies are managed with [uv](https://docs.astral.sh/uv/); this folder is
+its own uv project. The `vowpalwabbit` wheel doesn't ship a standalone `vw`
+binary, so the scripts call its CLI as `uv run python -m vowpalwabbit` (same
+flags, but it can't read stdin).
+
+Paths like `data/work/` below are in the repo's shared `data/` folder
+(`../data` from here).
 
 ```
-make download   # fetch UD v2.7 into data/ (then untar ud-treebanks-v2.7.tgz)
+make download   # fetch UD v2.7 into data/ (then untar ud-treebanks-v2.7.tgz there)
 make prepare    # convert UD_English-EWT to VW format in data/work/
 make train      # train data/work/model.vw (~8.4 MB; SIZE=small for ~0.4 MB)
 make eval       # score dev and test, with a most-frequent-tag baseline
@@ -35,15 +44,15 @@ make pipeline-eval  # raw EWT dev/test paragraphs through all four models, score
 uv run --group spacy python pipeline.py IN.txt OUT.conllu  # any text, one paragraph per line
 ```
 
-Word embeddings trained with VW, compared against gensim word2vec and
-PPMI+SVD, are in [`word2vec/`](word2vec/README.md). That folder has its own
-Makefile and its own uv project (Python 3.12-3.13, for gensim), and shares `data/`
-with the rest of the repo.
+Word embeddings trained with VW are a separate project in
+[`../word2vec/`](../word2vec/README.md).
 
 ## Data
 
 Nothing under `data/` is committed; `make download` fetches the UD release and
-the commands below rebuild the rest.
+the commands below rebuild the rest. The C4 and WikiText downloads are shared
+with `word2vec/`, so they live in the [root Makefile](../Makefile), which this
+folder's Makefile calls when it needs them.
 
 ### Universal Dependencies v2.7, English
 
@@ -138,10 +147,12 @@ non-commercial restriction.
 The earlier NER models used paragraphs from
 [WikiText-103](https://huggingface.co/datasets/Salesforce/wikitext) (raw
 version; Wikipedia articles, CC BY-SA 4.0, ~100M words) instead.
-`wikitext-to-text.py` skips headings, undoes WikiText's tokenization spacing
+`wikitext-to-text.py` (at the repo root, since `word2vec/` uses the same
+sample) skips headings, undoes WikiText's tokenization spacing
 (`role @-@ playing` -> `role-playing`, `word ,` -> `word,`) and writes a
 seeded random sample of paragraphs as `# text` lines, all from the first of
-the two training shards (~50M words). The Makefile keeps those targets:
+the two training shards (~50M words). The root Makefile builds the sample and
+this folder's Makefile labels it:
 
 | File | Contents | Sentences | Tokens |
 |---|---|---|---|
@@ -178,7 +189,8 @@ tokens. It came out of two hill-climbs, described below and in "Small model".
 Train times before the small-model climb are rough: other jobs were often
 running on the same 4-core machine.
 
-The first hill-climb (records in `.claude/hillclimb/vw-tagger/`: `narrative.md`
+The first hill-climb (records in `.claude/hillclimb/vw-tagger/` at the repo
+root, not committed: `narrative.md`
 for the story, `results.tsv` for every run) found the features; the second
 (`.claude/hillclimb/vw-tagger-small/`) found the training settings and made
 the model small. The first climb's config, now replaced, used:
